@@ -241,7 +241,7 @@ const App = {
             subtitle.textContent = 'Place 10 landmarks on the lateral cervical X-ray in sequence';
         } else {
             title.textContent = 'Lumbar Landmark Annotation';
-            subtitle.textContent = 'Place 8 landmarks on the lateral lumbar X-ray in sequence';
+            subtitle.textContent = 'Place 9 landmarks on the lateral lumbar X-ray in sequence';
         }
 
         // Initialize annotator with the lateral image

@@ -36,11 +36,17 @@ const Annotator = {
         { id: 'brow',        label: 'Brow Point',                       short: 'Brow' }
     ],
 
+    // Lumbar landmark indices:
+    //   0: L1 Sup Ant    1: L1 Sup Post
+    //   2: S1 Sup Ant    3: S1 Sup Post    4: S1 Sup Mid
+    //   5: S1 Post-Sup   6: C7 Center
+    //   7: FH Left       8: FH Right
     LUMBAR_LANDMARKS: [
         { id: 'l1_sup_ant',  label: 'L1 Superior Endplate (Anterior)',  short: 'L1 Sup Ant' },
         { id: 'l1_sup_post', label: 'L1 Superior Endplate (Posterior)', short: 'L1 Sup Post' },
         { id: 's1_sup_ant',  label: 'S1 Superior Endplate (Anterior)',  short: 'S1 Sup Ant' },
         { id: 's1_sup_post', label: 'S1 Superior Endplate (Posterior)', short: 'S1 Sup Post' },
+        { id: 's1_sup_mid',  label: 'S1 Superior Endplate (Midpoint)',  short: 'S1 Sup Mid' },
         { id: 's1_post_sup', label: 'S1 Posterior-Superior Corner',     short: 'S1 Post-Sup' },
         { id: 'c7_centroid', label: 'C7 Centroid (on full-spine film)', short: 'C7 Center' },
         { id: 'fh_left',     label: 'Left Femoral Head Center',         short: 'FH Left' },
@@ -357,6 +363,8 @@ const Annotator = {
     },
 
     // ---- Lumbar measurement lines ----
+    // Indices: 0=L1SupAnt, 1=L1SupPost, 2=S1SupAnt, 3=S1SupPost, 4=S1SupMid,
+    //          5=S1PostSup, 6=C7Center, 7=FHLeft, 8=FHRight
     drawLumbarLines(ctx) {
         const lm = this.landmarks;
 
@@ -374,59 +382,59 @@ const Annotator = {
             this.drawAngleArc(ctx, lm[0], lm[1], lm[2], lm[3], `LL: ${angle.toFixed(1)}\u00B0`);
         }
 
-        // SVA: C7 centroid (5) to S1 post-sup (4)
-        if (lm.length >= 6) {
-            const plumbEnd = { x: lm[5].x, y: Math.max(lm[4].y, lm[5].y + 100) };
-            this.drawDashedLine(ctx, lm[5], plumbEnd, 'C7 plumb');
+        // SVA: C7 centroid (6) to S1 post-sup (5)
+        if (lm.length >= 7) {
+            const plumbEnd = { x: lm[6].x, y: Math.max(lm[5].y, lm[6].y + 100) };
+            this.drawDashedLine(ctx, lm[6], plumbEnd, 'C7 plumb');
 
-            const s1Ref = { x: lm[5].x, y: lm[4].y };
-            this.drawDashedLine(ctx, s1Ref, lm[4], '');
+            const s1Ref = { x: lm[6].x, y: lm[5].y };
+            this.drawDashedLine(ctx, s1Ref, lm[5], '');
 
-            const dist = Math.abs(lm[5].x - lm[4].x);
-            this.drawLabel(ctx, (lm[5].x + lm[4].x) / 2, lm[4].y - 8, `SVA: ${dist.toFixed(0)}px`);
+            const dist = Math.abs(lm[6].x - lm[5].x);
+            this.drawLabel(ctx, (lm[6].x + lm[5].x) / 2, lm[5].y - 8, `SVA: ${dist.toFixed(0)}px`);
         }
 
-        // PI: S1 endplate perpendicular → hip center (6-7)
-        if (lm.length >= 8) {
-            // Midpoint of S1 endplate
-            const s1Mid = this.midpoint(lm[2], lm[3]);
-            // Midpoint of femoral heads = hip center
-            const hipCenter = this.midpoint(lm[6], lm[7]);
+        // PI and PT: need S1 Sup Ant(2), S1 Sup Post(3), S1 Sup Mid(4), FH Left(7), FH Right(8)
+        if (lm.length >= 9) {
+            const s1SupMid = lm[4]; // user-placed S1 Sup Mid
+            // Hip center = midpoint of both femoral heads
+            const hipCenter = this.midpoint(lm[7], lm[8]);
 
             // Draw femoral head markers
-            ctx.beginPath();
-            ctx.arc(lm[6].x, lm[6].y, 3, 0, Math.PI * 2);
-            ctx.fillStyle = this.COLORS.landmark;
-            ctx.fill();
             ctx.beginPath();
             ctx.arc(lm[7].x, lm[7].y, 3, 0, Math.PI * 2);
             ctx.fillStyle = this.COLORS.landmark;
             ctx.fill();
+            ctx.beginPath();
+            ctx.arc(lm[8].x, lm[8].y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = this.COLORS.landmark;
+            ctx.fill();
 
-            // Line from hip center to S1 midpoint
-            this.drawDashedLine(ctx, hipCenter, s1Mid, '');
+            // Line 1: hip center → S1 Sup Mid
+            this.drawDashedLine(ctx, hipCenter, s1SupMid, '');
 
-            // S1 endplate perpendicular (cephalad direction — away from hip center)
+            // Line 2: S1 Sup Mid → perpendicular to S1 endplate (S1 Sup Ant → S1 Sup Post)
             const epAngle = Math.atan2(lm[3].y - lm[2].y, lm[3].x - lm[2].x);
             const perp1 = epAngle - Math.PI / 2;
             const perp2 = epAngle + Math.PI / 2;
-            const toHipX = hipCenter.x - s1Mid.x;
-            const toHipY = hipCenter.y - s1Mid.y;
+            // Pick perpendicular pointing away from hip center
+            const toHipX = hipCenter.x - s1SupMid.x;
+            const toHipY = hipCenter.y - s1SupMid.y;
             const dot1 = Math.cos(perp1) * toHipX + Math.sin(perp1) * toHipY;
             const perpAngle = dot1 < 0 ? perp1 : perp2;
             const perpLen = 60;
             const perpEnd = {
-                x: s1Mid.x + perpLen * Math.cos(perpAngle),
-                y: s1Mid.y + perpLen * Math.sin(perpAngle)
+                x: s1SupMid.x + perpLen * Math.cos(perpAngle),
+                y: s1SupMid.y + perpLen * Math.sin(perpAngle)
             };
-            this.drawDashedLine(ctx, s1Mid, perpEnd, 'perp');
+            this.drawDashedLine(ctx, s1SupMid, perpEnd, 'perp');
 
             // Compute PI
-            const pi = this.computePI(lm[2], lm[3], hipCenter);
-            this.drawLabel(ctx, s1Mid.x + 15, s1Mid.y - 20, `PI: ${pi.toFixed(1)}\u00B0`);
+            const pi = this.computePI(lm[2], lm[3], s1SupMid, hipCenter);
+            this.drawLabel(ctx, s1SupMid.x + 15, s1SupMid.y - 20, `PI: ${pi.toFixed(1)}\u00B0`);
 
             // Compute PT
-            const pt = this.computePT(s1Mid, hipCenter);
+            const pt = this.computePT(s1SupMid, hipCenter);
             this.drawLabel(ctx, hipCenter.x + 15, hipCenter.y - 8, `PT: ${pt.toFixed(1)}\u00B0`);
         }
     },
@@ -550,32 +558,26 @@ const Annotator = {
         return Math.sqrt(dx * dx + dy * dy);
     },
 
-    // Pelvic Incidence: angle between two lines that both originate at S1 mid
-    //   Line 1: S1 mid → hip center (midpoint of both femoral heads)
-    //   Line 2: S1 mid → along perpendicular to S1 endplate (pointing cephalad/away from hip center)
-    // S1 mid = midpoint of S1 Sup Ant (s1_ant) and S1 Sup Post (s1_post)
-    computePI(s1_ant, s1_post, hipCenter) {
-        const s1Mid = this.midpoint(s1_ant, s1_post);
-
-        // S1 endplate direction vector (anterior → posterior)
+    // Pelvic Incidence: the SMALLER angle where two lines meet at S1 Sup Mid
+    //   Line 1: S1 Sup Mid → hip center (midpoint of both femoral heads)
+    //   Line 2: S1 Sup Mid → perpendicular to S1 endplate line (S1 Sup Ant → S1 Sup Post)
+    // s1_ant / s1_post define the endplate direction; s1SupMid is the user-placed midpoint
+    computePI(s1_ant, s1_post, s1SupMid, hipCenter) {
+        // S1 endplate direction (anterior → posterior)
         const epAngle = Math.atan2(s1_post.y - s1_ant.y, s1_post.x - s1_ant.x);
 
-        // Two possible perpendiculars — pick the one pointing AWAY from hip center (cephalad)
+        // Two possible perpendiculars — pick the one pointing AWAY from hip center
         const perp1 = epAngle - Math.PI / 2;
         const perp2 = epAngle + Math.PI / 2;
-
-        // Test which perpendicular points away from hip center
-        // The cephalad perpendicular should have a dot product < 0 with the S1mid→hipCenter vector
-        const toHipX = hipCenter.x - s1Mid.x;
-        const toHipY = hipCenter.y - s1Mid.y;
-
+        const toHipX = hipCenter.x - s1SupMid.x;
+        const toHipY = hipCenter.y - s1SupMid.y;
         const dot1 = Math.cos(perp1) * toHipX + Math.sin(perp1) * toHipY;
         const perpAngle = dot1 < 0 ? perp1 : perp2;
 
-        // Vector from S1 mid to hip center
-        const hipAngle = Math.atan2(hipCenter.y - s1Mid.y, hipCenter.x - s1Mid.x);
+        // Line from S1 Sup Mid → hip center
+        const hipAngle = Math.atan2(hipCenter.y - s1SupMid.y, hipCenter.x - s1SupMid.x);
 
-        // PI = angle between the perpendicular vector and the hip-center vector
+        // PI = smaller angle between the two lines at S1 Sup Mid
         let pi = Math.abs(perpAngle - hipAngle);
         if (pi > Math.PI) pi = 2 * Math.PI - pi;
         return pi * (180 / Math.PI);
@@ -649,6 +651,8 @@ const Annotator = {
         return r;
     },
 
+    // Lumbar indices: 0=L1SupAnt, 1=L1SupPost, 2=S1SupAnt, 3=S1SupPost,
+    //   4=S1SupMid, 5=S1PostSup, 6=C7Center, 7=FHLeft, 8=FHRight
     getLumbarResults() {
         const lm = this.landmarks;
         const r = { pi: NaN, ll: NaN, sva: NaN, pt: NaN };
@@ -658,18 +662,18 @@ const Annotator = {
             r.ll = parseFloat(this.cobbAngle(lm[0], lm[1], lm[2], lm[3]).toFixed(1));
         }
 
-        // SVA: horizontal distance C7 centroid (5) to S1 post-sup (4)
-        if (lm.length >= 6) {
-            const pxDist = Math.abs(lm[5].x - lm[4].x);
+        // SVA: horizontal distance C7 centroid (6) to S1 post-sup (5)
+        if (lm.length >= 7) {
+            const pxDist = Math.abs(lm[6].x - lm[5].x);
             r.sva = this.overrides.sva != null ? this.overrides.sva : parseFloat(pxDist.toFixed(1));
         }
 
-        // PI and PT: need S1 endplate (2-3) and femoral heads (6-7)
-        if (lm.length >= 8) {
-            const hipCenter = this.midpoint(lm[6], lm[7]);
-            const s1Mid = this.midpoint(lm[2], lm[3]);
-            r.pi = parseFloat(this.computePI(lm[2], lm[3], hipCenter).toFixed(1));
-            r.pt = parseFloat(this.computePT(s1Mid, hipCenter).toFixed(1));
+        // PI and PT: need S1 Sup Ant(2), S1 Sup Post(3), S1 Sup Mid(4), FH Left(7), FH Right(8)
+        if (lm.length >= 9) {
+            const s1SupMid = lm[4];
+            const hipCenter = this.midpoint(lm[7], lm[8]);
+            r.pi = parseFloat(this.computePI(lm[2], lm[3], s1SupMid, hipCenter).toFixed(1));
+            r.pt = parseFloat(this.computePT(s1SupMid, hipCenter).toFixed(1));
         }
 
         return r;
