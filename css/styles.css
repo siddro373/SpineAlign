@@ -22,9 +22,9 @@
     --card-bg-hover: #1f2b3d;
 
     /* Text */
-    --text: #e0e4ea;
-    --text-muted: #8b95a5;
-    --text-light: #5a6577;
+    --text: #f0f2f5;
+    --text-muted: #b8c0cc;
+    --text-light: #8b95a8;
 
     /* Borders */
     --border: #2a3344;
@@ -1075,6 +1075,76 @@ body {
 }
 
 /* =============================================
+   CONTACT REPRESENTATIVE CTA
+   ============================================= */
+.btn-contact-rep {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    padding: 24px 32px;
+    margin-top: 24px;
+    background: linear-gradient(135deg, #1a3a5c, #2a5a8c);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: left;
+    font-family: inherit;
+    box-shadow: 0 0 0 0 rgba(74, 158, 173, 0), var(--shadow);
+}
+.btn-contact-rep:hover {
+    background: linear-gradient(135deg, #1f4570, #3068a0);
+    border-color: var(--accent-hover);
+    box-shadow: 0 0 24px rgba(74, 158, 173, 0.3), var(--shadow-lg);
+    transform: translateY(-2px);
+}
+.btn-contact-rep:active {
+    transform: translateY(0);
+}
+.btn-contact-rep-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    border-radius: 14px;
+    color: #0d1117;
+}
+.btn-contact-rep-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+.btn-contact-rep-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.btn-contact-rep-sub {
+    font-size: 13px;
+    color: var(--accent-hover);
+    font-weight: 400;
+}
+.btn-contact-rep-arrow {
+    font-size: 24px;
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+.btn-contact-rep:hover .btn-contact-rep-arrow {
+    transform: translateX(4px);
+}
+
+/* =============================================
    PRINT
    ============================================= */
 @media print {
@@ -1092,7 +1162,8 @@ body {
     .header { position: static; background: white; color: #1a1a1a; border-bottom: 2px solid #ccc; }
     .header-logo { background: #333; }
     .flow-progress, .btn-group, .welcome-disclaimer,
-    .toast-container, .modal-overlay, .annotator-toolbar { display: none !important; }
+    .toast-container, .modal-overlay, .annotator-toolbar,
+    .btn-contact-rep { display: none !important; }
     .screen { display: block !important; }
     .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; background: white; }
     .implant-card { break-inside: avoid; background: white; }
@@ -1117,6 +1188,9 @@ body {
     .btn-group { flex-direction: column; }
     .btn-group .btn { width: 100%; justify-content: center; }
     .welcome-greeting { font-size: 28px; }
+    .btn-contact-rep { padding: 20px; gap: 14px; }
+    .btn-contact-rep-title { font-size: 15px; }
+    .btn-contact-rep-icon { width: 44px; height: 44px; font-size: 24px; border-radius: 10px; }
 }
 
 @media (max-width: 480px) {
