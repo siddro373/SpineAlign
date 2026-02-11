@@ -406,8 +406,14 @@ const Annotator = {
             // Line from hip center to S1 midpoint
             this.drawDashedLine(ctx, hipCenter, s1Mid, '');
 
-            // S1 endplate perpendicular
-            const perpAngle = this.perpendicularAngle(lm[2], lm[3]);
+            // S1 endplate perpendicular (cephalad direction — away from hip center)
+            const epAngle = Math.atan2(lm[3].y - lm[2].y, lm[3].x - lm[2].x);
+            const perp1 = epAngle - Math.PI / 2;
+            const perp2 = epAngle + Math.PI / 2;
+            const toHipX = hipCenter.x - s1Mid.x;
+            const toHipY = hipCenter.y - s1Mid.y;
+            const dot1 = Math.cos(perp1) * toHipX + Math.sin(perp1) * toHipY;
+            const perpAngle = dot1 < 0 ? perp1 : perp2;
             const perpLen = 60;
             const perpEnd = {
                 x: s1Mid.x + perpLen * Math.cos(perpAngle),
@@ -544,16 +550,32 @@ const Annotator = {
         return Math.sqrt(dx * dx + dy * dy);
     },
 
-    // Pelvic Incidence: angle between S1 endplate perpendicular and line to hip center
+    // Pelvic Incidence: angle between two lines that both originate at S1 mid
+    //   Line 1: S1 mid → hip center (midpoint of both femoral heads)
+    //   Line 2: S1 mid → along perpendicular to S1 endplate (pointing cephalad/away from hip center)
+    // S1 mid = midpoint of S1 Sup Ant (s1_ant) and S1 Sup Post (s1_post)
     computePI(s1_ant, s1_post, hipCenter) {
         const s1Mid = this.midpoint(s1_ant, s1_post);
-        // S1 endplate angle
+
+        // S1 endplate direction vector (anterior → posterior)
         const epAngle = Math.atan2(s1_post.y - s1_ant.y, s1_post.x - s1_ant.x);
-        // Perpendicular to endplate
-        const perpAngle = epAngle - Math.PI / 2;
-        // Line from S1 mid to hip center
+
+        // Two possible perpendiculars — pick the one pointing AWAY from hip center (cephalad)
+        const perp1 = epAngle - Math.PI / 2;
+        const perp2 = epAngle + Math.PI / 2;
+
+        // Test which perpendicular points away from hip center
+        // The cephalad perpendicular should have a dot product < 0 with the S1mid→hipCenter vector
+        const toHipX = hipCenter.x - s1Mid.x;
+        const toHipY = hipCenter.y - s1Mid.y;
+
+        const dot1 = Math.cos(perp1) * toHipX + Math.sin(perp1) * toHipY;
+        const perpAngle = dot1 < 0 ? perp1 : perp2;
+
+        // Vector from S1 mid to hip center
         const hipAngle = Math.atan2(hipCenter.y - s1Mid.y, hipCenter.x - s1Mid.x);
-        // PI = angle between perpendicular and hip line
+
+        // PI = angle between the perpendicular vector and the hip-center vector
         let pi = Math.abs(perpAngle - hipAngle);
         if (pi > Math.PI) pi = 2 * Math.PI - pi;
         return pi * (180 / Math.PI);
