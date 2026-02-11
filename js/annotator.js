@@ -414,20 +414,20 @@ const Annotator = {
             this.drawDashedLine(ctx, hipCenter, s1SupMid, '');
 
             // Line 2: S1 Sup Mid → perpendicular to S1 endplate (S1 Sup Ant → S1 Sup Post)
+            // Draw perpendicular in BOTH directions from S1 Sup Mid for visual clarity
             const epAngle = Math.atan2(lm[3].y - lm[2].y, lm[3].x - lm[2].x);
             const perp1 = epAngle - Math.PI / 2;
             const perp2 = epAngle + Math.PI / 2;
-            // Pick perpendicular pointing away from hip center
-            const toHipX = hipCenter.x - s1SupMid.x;
-            const toHipY = hipCenter.y - s1SupMid.y;
-            const dot1 = Math.cos(perp1) * toHipX + Math.sin(perp1) * toHipY;
-            const perpAngle = dot1 < 0 ? perp1 : perp2;
             const perpLen = 60;
-            const perpEnd = {
-                x: s1SupMid.x + perpLen * Math.cos(perpAngle),
-                y: s1SupMid.y + perpLen * Math.sin(perpAngle)
+            const perpEnd1 = {
+                x: s1SupMid.x + perpLen * Math.cos(perp1),
+                y: s1SupMid.y + perpLen * Math.sin(perp1)
             };
-            this.drawDashedLine(ctx, s1SupMid, perpEnd, 'perp');
+            const perpEnd2 = {
+                x: s1SupMid.x + perpLen * Math.cos(perp2),
+                y: s1SupMid.y + perpLen * Math.sin(perp2)
+            };
+            this.drawDashedLine(ctx, perpEnd1, perpEnd2, 'perp');
 
             // Compute PI
             const pi = this.computePI(lm[2], lm[3], s1SupMid, hipCenter);
@@ -560,27 +560,31 @@ const Annotator = {
 
     // Pelvic Incidence: the SMALLER angle where two lines meet at S1 Sup Mid
     //   Line 1: S1 Sup Mid → hip center (midpoint of both femoral heads)
-    //   Line 2: S1 Sup Mid → perpendicular to S1 endplate line (S1 Sup Ant → S1 Sup Post)
-    // s1_ant / s1_post define the endplate direction; s1SupMid is the user-placed midpoint
+    //   Line 2: S1 Sup Mid → perpendicular to S1 endplate (S1 Sup Ant → S1 Sup Post)
+    // Reference: Legaye et al. — PI is the angle between the perpendicular to
+    // the sacral endplate at its midpoint and the line from that midpoint to
+    // the center of the femoral heads. Normal range: 35°–85°, mean ~55°.
     computePI(s1_ant, s1_post, s1SupMid, hipCenter) {
         // S1 endplate direction (anterior → posterior)
         const epAngle = Math.atan2(s1_post.y - s1_ant.y, s1_post.x - s1_ant.x);
 
-        // Two possible perpendiculars — pick the one pointing AWAY from hip center
+        // Perpendicular to endplate (two directions, 180° apart)
         const perp1 = epAngle - Math.PI / 2;
         const perp2 = epAngle + Math.PI / 2;
-        const toHipX = hipCenter.x - s1SupMid.x;
-        const toHipY = hipCenter.y - s1SupMid.y;
-        const dot1 = Math.cos(perp1) * toHipX + Math.sin(perp1) * toHipY;
-        const perpAngle = dot1 < 0 ? perp1 : perp2;
 
         // Line from S1 Sup Mid → hip center
         const hipAngle = Math.atan2(hipCenter.y - s1SupMid.y, hipCenter.x - s1SupMid.x);
 
-        // PI = smaller angle between the two lines at S1 Sup Mid
-        let pi = Math.abs(perpAngle - hipAngle);
-        if (pi > Math.PI) pi = 2 * Math.PI - pi;
-        return pi * (180 / Math.PI);
+        // Compute angle between each perpendicular and the hip line
+        // PI is the SMALLER of the two (always the acute/obtuse one < 180°)
+        let diff1 = Math.abs(perp1 - hipAngle);
+        if (diff1 > Math.PI) diff1 = 2 * Math.PI - diff1;
+
+        let diff2 = Math.abs(perp2 - hipAngle);
+        if (diff2 > Math.PI) diff2 = 2 * Math.PI - diff2;
+
+        // The two diffs should sum to ~180°; PI is the smaller one
+        return Math.min(diff1, diff2) * (180 / Math.PI);
     },
 
     // Pelvic Tilt: angle of hip-center-to-S1-midpoint line relative to vertical
