@@ -1174,8 +1174,12 @@ body {
 /* =============================================
    RESPONSIVE
    ============================================= */
+
+/* --- Tablet / Small desktop (≤ 768px) --- */
 @media (max-width: 768px) {
     .header { padding: 0 16px; }
+    .header-badge { display: none; }
+    .header-actions .btn-sm { padding: 5px 10px; font-size: 11px; }
     .container { padding: 16px; }
     .card { padding: 20px; }
     .form-grid { grid-template-columns: 1fr; }
@@ -1191,11 +1195,128 @@ body {
     .btn-contact-rep { padding: 20px; gap: 14px; }
     .btn-contact-rep-title { font-size: 15px; }
     .btn-contact-rep-icon { width: 44px; height: 44px; font-size: 24px; border-radius: 10px; }
+
+    /* Flow progress: horizontal scroll on tablet */
+    .flow-progress { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; white-space: nowrap; padding-bottom: 4px; }
+
+    /* Summary table scroll */
+    .summary-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* Implant header stack */
+    .implant-header { flex-direction: column; align-items: flex-start; }
 }
 
+/* --- Mobile (≤ 480px) --- */
 @media (max-width: 480px) {
+    /* Header: two-row layout */
+    .header {
+        height: auto;
+        flex-wrap: wrap;
+        padding: 10px 14px;
+        gap: 6px;
+    }
+    .header-brand {
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+    }
+    .header-logo {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        border-radius: 6px;
+    }
+    .header-brand h1 {
+        font-size: 15px;
+        white-space: nowrap;
+    }
+    .header-brand .subtitle {
+        font-size: 9px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .header-actions {
+        gap: 6px;
+    }
+    .header-actions .btn-sm {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    /* Container */
+    .container { padding: 12px; }
+    .card { padding: 16px; }
+
+    /* Results */
     .results-grid { grid-template-columns: 1fr; }
     .param-value { font-size: 26px; }
-    .header-brand h1 { font-size: 16px; }
+
+    /* Welcome */
+    .welcome-screen { padding: 24px 16px; min-height: calc(100vh - 80px - 48px); }
+    .welcome-logo { width: 52px; height: 52px; font-size: 26px; border-radius: 12px; margin-bottom: 24px; }
     .welcome-greeting { font-size: 24px; }
+    .welcome-subtitle { font-size: 14px; margin-bottom: 28px; }
+    .welcome-cta { padding: 12px 28px; font-size: 14px; }
+    .welcome-disclaimer { font-size: 10px; padding: 8px 14px; }
+    .welcome-actions { flex-direction: column; width: 100%; max-width: 280px; }
+    .welcome-actions .btn { width: 100%; justify-content: center; }
+
+    /* Region cards */
+    .region-card { padding: 20px 16px; }
+    .region-icon { width: 44px; height: 44px; font-size: 20px; margin-bottom: 10px; }
+    .region-label { font-size: 16px; }
+
+    /* Upload */
+    .upload-dropzone { padding: 24px 16px; min-height: 160px; }
+    .dropzone-icon { font-size: 28px; }
+    .dropzone-label { font-size: 13px; }
+
+    /* Flow progress: compact */
+    .flow-progress { gap: 4px; font-size: 11px; }
+    .flow-step { font-size: 10px; }
+    .flow-separator { font-size: 9px; }
+
+    /* Annotator */
+    .annotator-layout { min-height: 400px; }
+    .annotator-toolbar { flex-wrap: wrap; padding: 6px 8px; }
+
+    /* Forms */
+    .form-group input, .form-group select, .form-group textarea { padding: 8px 12px; font-size: 13px; }
+
+    /* Card titles */
+    .card-title { font-size: 18px; }
+    .card-subtitle { font-size: 12px; }
+    .card-section-title { font-size: 14px; }
+
+    /* Implant cards */
+    .implant-card { padding: 16px; }
+    .implant-name { font-size: 16px; }
+    .implant-desc { font-size: 12px; }
+    .implant-features li { font-size: 12px; }
+    .implant-rationale { font-size: 12px; padding: 10px 14px; }
+
+    /* Btn groups */
+    .btn-group .toolbar { flex-direction: column; width: 100%; }
+    .btn-group .toolbar .btn { width: 100%; justify-content: center; }
+
+    /* Contact CTA */
+    .btn-contact-rep { padding: 16px; gap: 12px; }
+    .btn-contact-rep-icon { width: 40px; height: 40px; font-size: 20px; border-radius: 8px; }
+    .btn-contact-rep-title { font-size: 13px; }
+    .btn-contact-rep-sub { font-size: 11px; }
+    .btn-contact-rep-arrow { font-size: 20px; }
+
+    /* Modal */
+    .modal { padding: 20px; width: 95%; }
+
+    /* Disclaimer */
+    .disclaimer { font-size: 12px; padding: 10px 14px; }
+
+    /* Toast */
+    .toast-container { bottom: 12px; right: 12px; left: 12px; }
+    .toast { max-width: 100%; }
+
+    /* Info box */
+    .info-box { font-size: 12px; padding: 10px 14px; }
 }
