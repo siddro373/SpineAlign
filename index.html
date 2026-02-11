@@ -20,8 +20,8 @@
         </div>
     </div>
     <div class="header-actions">
-        <button class="btn btn-sm btn-outline" style="color:white; border-color:rgba(255,255,255,0.3);" onclick="UI.openModal('caseModal')">Saved Cases</button>
-        <button class="btn btn-sm btn-outline" style="color:white; border-color:rgba(255,255,255,0.3);" onclick="App.saveCase()">Save Case</button>
+        <button class="btn btn-sm btn-outline" onclick="UI.openModal('caseModal')">Saved Cases</button>
+        <button class="btn btn-sm btn-outline" onclick="App.saveCase()">Save Case</button>
         <span class="header-badge">Surgical Planning Tool</span>
     </div>
 </div>
@@ -31,50 +31,53 @@
 <!-- ============================================ -->
 <div class="container">
 
-    <!-- Disclaimer -->
-    <div class="disclaimer">
-        <span class="disclaimer-icon">&#9888;</span>
-        <div>
+    <!-- Flow Progress Breadcrumb (hidden on welcome) -->
+    <div class="flow-progress" id="flowProgress" style="display:none;">
+        <span class="flow-step" data-screen="patient">Patient</span>
+        <span class="flow-separator">&rsaquo;</span>
+        <span class="flow-step" data-screen="region">Region</span>
+        <span class="flow-separator">&rsaquo;</span>
+        <span class="flow-step" data-screen="upload">Upload</span>
+        <span class="flow-separator">&rsaquo;</span>
+        <span class="flow-step" data-screen="annotate">Annotate</span>
+        <span class="flow-separator">&rsaquo;</span>
+        <span class="flow-step" data-screen="manual">Parameters</span>
+        <span class="flow-separator">&rsaquo;</span>
+        <span class="flow-step" data-screen="corrections">Targets</span>
+        <span class="flow-separator">&rsaquo;</span>
+        <span class="flow-step" data-screen="implants">Implants</span>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN: Welcome                              -->
+    <!-- ============================================ -->
+    <div class="screen active" id="screen-welcome">
+        <div class="welcome-screen">
+            <div class="welcome-logo">S</div>
+            <div class="welcome-greeting" id="welcomeGreeting">Good evening, Dr.</div>
+            <div class="welcome-subtitle">Let's upload your first set of surgical plans.</div>
+            <div class="welcome-actions">
+                <button class="btn btn-accent welcome-cta" onclick="App.goToScreen('patient')">New Case</button>
+                <button class="btn btn-outline welcome-cta" onclick="UI.openModal('caseModal')">Saved Cases</button>
+            </div>
+        </div>
+        <div class="welcome-disclaimer">
             <strong>Disclaimer:</strong>
             This tool is intended for surgical planning purposes only and does not replace clinical judgment.
             All computed correction targets are based on published normative values and must be validated by the treating surgeon.
-            Patient-specific anatomy and clinical context must always guide final surgical decisions.
             No patient data is transmitted or stored externally.
         </div>
     </div>
 
-    <!-- Step Navigation -->
-    <div class="steps-nav">
-        <button class="step-btn active" onclick="App.goToStep(1)" id="step-btn-1">
-            <span class="step-num">1</span> Patient Info
-        </button>
-        <button class="step-btn" onclick="App.goToStep(2)" id="step-btn-2">
-            <span class="step-num">2</span> Cervical Parameters
-        </button>
-        <button class="step-btn" onclick="App.goToStep(3)" id="step-btn-3">
-            <span class="step-num">3</span> Lumbar Parameters
-        </button>
-        <button class="step-btn" onclick="App.goToStep(4)" id="step-btn-4">
-            <span class="step-num">4</span> Correction Targets
-        </button>
-        <button class="step-btn" onclick="App.goToStep(5)" id="step-btn-5">
-            <span class="step-num">5</span> Implant Recommendations
-        </button>
-    </div>
-
     <!-- ============================================ -->
-    <!-- STEP 1: Patient Information                  -->
+    <!-- SCREEN: Patient Information                   -->
     <!-- ============================================ -->
-    <div class="step-panel active" id="step-1">
+    <div class="screen" id="screen-patient">
         <div class="card">
             <div class="card-title">Patient Information</div>
             <div class="card-subtitle">Enter anonymized patient demographics and clinical factors</div>
 
             <div class="form-grid">
-                <div class="form-group">
-                    <label>Patient Identifier <span class="hint">(Anonymized ID)</span></label>
-                    <input type="text" id="patientId" placeholder="e.g., PT-2024-001">
-                </div>
                 <div class="form-group">
                     <label>Age (years)</label>
                     <input type="number" id="age" min="18" max="100" placeholder="e.g., 55">
@@ -82,14 +85,6 @@
                 <div class="form-group">
                     <label>BMI (kg/m&sup2;)</label>
                     <input type="number" id="bmi" step="0.1" min="10" max="60" placeholder="e.g., 28.5">
-                </div>
-                <div class="form-group">
-                    <label>Sex</label>
-                    <select id="sex">
-                        <option value="">Select...</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
                 </div>
                 <div class="form-group">
                     <label>
@@ -104,6 +99,15 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Smoking Status</label>
+                    <select id="smoking">
+                        <option value="">Select...</option>
+                        <option value="never">Never</option>
+                        <option value="former">Former</option>
+                        <option value="current">Current</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Primary Pathology</label>
                     <select id="pathology">
                         <option value="">Select...</option>
@@ -115,220 +119,348 @@
                         <option value="revision">Revision Surgery</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Surgical Region</label>
-                    <div class="radio-group" style="margin-top:4px;">
-                        <label class="radio-option">
-                            <input type="checkbox" id="regionCervical" checked> Cervical
-                        </label>
-                        <label class="radio-option">
-                            <input type="checkbox" id="regionLumbar" checked> Lumbar
-                        </label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Smoking Status</label>
-                    <select id="smoking">
-                        <option value="">Select...</option>
-                        <option value="never">Never</option>
-                        <option value="former">Former</option>
-                        <option value="current">Current</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Previous Spine Surgery</label>
-                    <select id="prevSurgery">
-                        <option value="">Select...</option>
-                        <option value="none">None</option>
-                        <option value="cervical">Prior Cervical</option>
-                        <option value="lumbar">Prior Lumbar</option>
-                        <option value="both">Prior Cervical &amp; Lumbar</option>
-                    </select>
-                </div>
             </div>
 
-            <div class="btn-group">
-                <button class="btn btn-primary" onclick="App.savePatientAndNext()">Continue to Parameters &rarr;</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- STEP 2: Cervical Parameters                  -->
-    <!-- ============================================ -->
-    <div class="step-panel" id="step-2">
-        <div class="card">
-            <div class="card-title">Cervical Deformity Parameters</div>
-            <div class="card-subtitle">Enter current measured values from standing lateral radiograph</div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>
-                        Cervical Lordosis (CL)
-                        <span class="hint">C2-C7 Modified Cobb angle (&deg;). Lordosis = negative value.</span>
-                    </label>
-                    <input type="number" id="cl" step="0.1" placeholder="e.g., -15 (lordotic) or +10 (kyphotic)">
-                </div>
-                <div class="form-group">
-                    <label>
-                        Cervical SVA (cSVA)
-                        <span class="hint">C2 centroid to C7 posterior superior endplate (mm)</span>
-                    </label>
-                    <input type="number" id="csva" step="0.1" min="0" placeholder="e.g., 35">
-                </div>
-                <div class="form-group">
-                    <label>
-                        T1 Slope (T1S)
-                        <span class="hint">Angle of T1 superior endplate to horizontal (&deg;)</span>
-                    </label>
-                    <input type="number" id="t1s" step="0.1" min="0" max="60" placeholder="e.g., 25">
-                </div>
-                <div class="form-group">
-                    <label>
-                        Chin-Brow Vertical Angle (CBVA)
-                        <span class="hint">Chin-brow line to vertical (&deg;). Positive = chin-down gaze.</span>
-                    </label>
-                    <input type="number" id="cbva" step="0.1" placeholder="e.g., 10">
-                </div>
-            </div>
-
-            <div class="card-section">
-                <div class="card-section-title">Cervical Surgical Details</div>
+            <!-- Optional Fields -->
+            <details class="optional-fields">
+                <summary>Additional Fields (Optional)</summary>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Approach</label>
-                        <select id="cervApproach">
+                        <label>Patient Identifier <span class="hint">(Anonymized ID)</span></label>
+                        <input type="text" id="patientId" placeholder="e.g., PT-2024-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Sex</label>
+                        <select id="sex">
                             <option value="">Select...</option>
-                            <option value="anterior">Anterior (ACDF / Corpectomy)</option>
-                            <option value="posterior">Posterior (Laminectomy + Fusion)</option>
-                            <option value="combined">Combined Anterior-Posterior</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Levels</label>
-                        <select id="cervLevels">
-                            <option value="">Select...</option>
-                            <option value="1">1 Level</option>
-                            <option value="2">2 Levels</option>
-                            <option value="3">3 Levels</option>
-                            <option value="4+">4+ Levels</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="btn-group">
-                <button class="btn btn-outline" onclick="App.goToStep(1)">&larr; Back</button>
-                <button class="btn btn-primary" onclick="App.saveCervicalAndNext()">Continue to Lumbar &rarr;</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================ -->
-    <!-- STEP 3: Lumbar Parameters                    -->
-    <!-- ============================================ -->
-    <div class="step-panel" id="step-3">
-        <div class="card">
-            <div class="card-title">Lumbar Deformity Parameters</div>
-            <div class="card-subtitle">Enter current measured values from standing full-spine radiograph</div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>
-                        Pelvic Incidence (PI)
-                        <span class="hint">Fixed anatomic parameter (&deg;). Measured from sacral endplate.</span>
-                    </label>
-                    <input type="number" id="pi" step="0.1" min="20" max="90" placeholder="e.g., 55">
-                </div>
-                <div class="form-group">
-                    <label>
-                        Lumbar Lordosis (LL)
-                        <span class="hint">L1&ndash;S1 Cobb angle (&deg;). Enter as positive value.</span>
-                    </label>
-                    <input type="number" id="ll" step="0.1" min="0" max="100" placeholder="e.g., 45">
-                </div>
-                <div class="form-group">
-                    <label>
-                        Sagittal Vertical Axis (SVA)
-                        <span class="hint">C7 plumbline to S1 posterior superior corner (mm)</span>
-                    </label>
-                    <input type="number" id="sva" step="0.1" placeholder="e.g., 50">
-                </div>
-                <div class="form-group">
-                    <label>
-                        Pelvic Tilt (PT)
-                        <span class="hint">Compensatory pelvic retroversion (&deg;)</span>
-                    </label>
-                    <input type="number" id="pt" step="0.1" min="0" max="50" placeholder="e.g., 22">
-                </div>
-            </div>
-
-            <div style="margin-top:16px;">
-                <div class="param-card" id="piLlDisplay" style="max-width:400px;">
-                    <span class="param-label">PI-LL Mismatch (Auto-calculated)</span>
-                    <span class="param-value" id="piLlValue">--</span>
-                    <span class="param-range">Target: PI-LL within &plusmn;10&deg;</span>
-                </div>
-            </div>
-
-            <div class="card-section">
-                <div class="card-section-title">Lumbar Surgical Details</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Approach</label>
-                        <select id="lumbarApproach">
-                            <option value="">Select...</option>
-                            <option value="posterior">Posterior (PLIF / TLIF)</option>
-                            <option value="lateral">Lateral (LLIF / DLIF)</option>
-                            <option value="anterior">Anterior (ALIF)</option>
-                            <option value="combined">Combined / 3-Column Osteotomy</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Levels</label>
-                        <select id="lumbarLevels">
-                            <option value="">Select...</option>
-                            <option value="1">1 Level</option>
-                            <option value="2">2 Levels</option>
-                            <option value="3">3 Levels</option>
-                            <option value="4+">4+ Levels / Long Construct</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Osteotomy Planned</label>
-                        <select id="osteotomy">
+                        <label>Previous Spine Surgery</label>
+                        <select id="prevSurgery">
                             <option value="">Select...</option>
                             <option value="none">None</option>
-                            <option value="spo">SPO / Ponte</option>
-                            <option value="pso">PSO (Pedicle Subtraction)</option>
-                            <option value="vcr">VCR (Vertebral Column Resection)</option>
+                            <option value="cervical">Prior Cervical</option>
+                            <option value="lumbar">Prior Lumbar</option>
+                            <option value="both">Prior Cervical &amp; Lumbar</option>
                         </select>
+                    </div>
+                </div>
+            </details>
+
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="App.goToScreen('welcome')">&larr; Home</button>
+                <button class="btn btn-accent" onclick="App.savePatientAndNext()">Continue &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN: Region Selection                      -->
+    <!-- ============================================ -->
+    <div class="screen" id="screen-region">
+        <div class="card">
+            <div class="card-title">Surgical Region</div>
+            <div class="card-subtitle">Select one or both spinal regions for planning</div>
+
+            <div class="region-grid">
+                <div class="region-card" id="regionCardCervical" onclick="App.toggleRegion('cervical')">
+                    <div class="region-icon">C</div>
+                    <div class="region-label">Cervical</div>
+                    <div class="region-desc">C2&ndash;T1 alignment parameters</div>
+                </div>
+                <div class="region-card" id="regionCardLumbar" onclick="App.toggleRegion('lumbar')">
+                    <div class="region-icon">L</div>
+                    <div class="region-label">Lumbar</div>
+                    <div class="region-desc">Thoracolumbar &amp; sagittal balance</div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="App.goToScreen('patient')">&larr; Back</button>
+                <button class="btn btn-accent" onclick="App.saveRegionAndNext()">Continue &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN: X-ray Upload                          -->
+    <!-- ============================================ -->
+    <div class="screen" id="screen-upload">
+        <div class="card">
+            <div class="card-title">Upload Radiographs</div>
+            <div class="card-subtitle">Upload lateral and AP views for landmark annotation</div>
+
+            <div class="upload-grid">
+                <div class="upload-dropzone" id="dropzoneLateral"
+                     ondragover="App.handleDragOver(event, 'lateral')"
+                     ondragleave="App.handleDragLeave(event, 'lateral')"
+                     ondrop="App.handleDrop(event, 'lateral')"
+                     onclick="document.getElementById('fileLateral').click()">
+                    <div class="dropzone-content" id="dropzoneLateralContent">
+                        <div class="dropzone-icon">&#128444;</div>
+                        <div class="dropzone-label">Lateral View</div>
+                        <div class="dropzone-hint">Drag &amp; drop or click to upload standing lateral radiograph</div>
+                    </div>
+                    <input type="file" id="fileLateral" accept="image/*" style="display:none" onchange="App.handleFileSelect(event, 'lateral')">
+                </div>
+                <div class="upload-dropzone" id="dropzoneAP"
+                     ondragover="App.handleDragOver(event, 'ap')"
+                     ondragleave="App.handleDragLeave(event, 'ap')"
+                     ondrop="App.handleDrop(event, 'ap')"
+                     onclick="document.getElementById('fileAP').click()">
+                    <div class="dropzone-content" id="dropzoneAPContent">
+                        <div class="dropzone-icon">&#128444;</div>
+                        <div class="dropzone-label">AP View</div>
+                        <div class="dropzone-hint">Drag &amp; drop or click to upload AP radiograph (optional, reference)</div>
+                    </div>
+                    <input type="file" id="fileAP" accept="image/*" style="display:none" onchange="App.handleFileSelect(event, 'ap')">
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top:16px;">
+                The lateral radiograph will be used for landmark annotation and automatic parameter computation.
+                All images remain on your device and are never transmitted externally.
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="App.goToScreen('region')">&larr; Back</button>
+                <button class="btn btn-outline" onclick="App.skipToManual()">Skip &mdash; Enter Manually</button>
+                <button class="btn btn-accent" id="btnProceedAnnotate" onclick="App.proceedToAnnotation()" disabled>Annotate Landmarks &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN: Annotate Landmarks                    -->
+    <!-- ============================================ -->
+    <div class="screen" id="screen-annotate">
+        <div class="card" style="padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div>
+                    <div class="card-title" style="margin-bottom:2px;" id="annotateTitle">Annotate Landmarks</div>
+                    <div class="card-subtitle" style="margin-bottom:0;" id="annotateSubtitle">Click to place each landmark in sequence</div>
+                </div>
+                <div class="toolbar">
+                    <button class="btn btn-sm btn-outline" onclick="Annotator.undo()" title="Undo last landmark">Undo</button>
+                    <button class="btn btn-sm btn-outline" onclick="Annotator.clearAll()" title="Clear all landmarks">Clear</button>
+                    <button class="btn btn-sm btn-outline" onclick="Annotator.zoomIn()" title="Zoom in">+</button>
+                    <button class="btn btn-sm btn-outline" onclick="Annotator.zoomOut()" title="Zoom out">&minus;</button>
+                </div>
+            </div>
+
+            <div class="annotator-layout">
+                <!-- Canvas area -->
+                <div class="annotator-canvas-wrap" id="annotatorCanvasWrap">
+                    <canvas id="annotatorCanvas"></canvas>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="annotator-sidebar">
+                    <!-- Landmark checklist -->
+                    <div class="sidebar-section">
+                        <h3>Landmarks</h3>
+                        <div id="landmarkChecklist"></div>
+                    </div>
+
+                    <!-- Computed measurements -->
+                    <div class="sidebar-section">
+                        <h3>Measurements</h3>
+                        <div id="measurementsList"></div>
+                    </div>
+
+                    <!-- Manual override inputs -->
+                    <div class="sidebar-section">
+                        <h3>Manual Override</h3>
+                        <div id="manualOverrides"></div>
+                        <div class="info-box" style="margin-top:8px; font-size:11px;">
+                            Angles are scale-invariant. Distance measurements (SVA, cSVA) are in pixels and can be overridden with mm values.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top:12px;">
+                <button class="btn btn-outline" onclick="App.goToScreen('upload')">&larr; Back</button>
+                <button class="btn btn-outline" onclick="App.skipToManual()">Enter Manually Instead</button>
+                <button class="btn btn-accent" id="btnAcceptAnnotation" onclick="App.acceptAnnotationAndCompute()">Accept &amp; Compute Targets &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN: Manual Entry (fallback / edit)        -->
+    <!-- ============================================ -->
+    <div class="screen" id="screen-manual">
+        <div class="card">
+            <div class="card-title">Spine Parameters</div>
+            <div class="card-subtitle">Enter or edit measured values from standing radiographs</div>
+
+            <!-- Cervical section -->
+            <div id="manualCervicalSection" style="display:none;">
+                <div class="card-section-title">Cervical Parameters</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>
+                            Cervical Lordosis (CL)
+                            <span class="hint">C2&ndash;C7 Modified Cobb angle (&deg;). Lordosis = negative value.</span>
+                        </label>
+                        <input type="number" id="cl" step="0.1" placeholder="e.g., -15 (lordotic) or +10 (kyphotic)">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            Cervical SVA (cSVA)
+                            <span class="hint">C2 centroid to C7 posterior superior endplate (mm)</span>
+                        </label>
+                        <input type="number" id="csva" step="0.1" min="0" placeholder="e.g., 35">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            T1 Slope (T1S)
+                            <span class="hint">Angle of T1 superior endplate to horizontal (&deg;)</span>
+                        </label>
+                        <input type="number" id="t1s" step="0.1" min="0" max="60" placeholder="e.g., 25">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            Chin-Brow Vertical Angle (CBVA)
+                            <span class="hint">Chin-brow line to vertical (&deg;). Positive = chin-down gaze.</span>
+                        </label>
+                        <input type="number" id="cbva" step="0.1" placeholder="e.g., 10">
+                    </div>
+                </div>
+
+                <div class="card-section">
+                    <div class="card-section-title">Cervical Surgical Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Approach</label>
+                            <select id="cervApproach">
+                                <option value="">Select...</option>
+                                <option value="anterior">Anterior (ACDF / Corpectomy)</option>
+                                <option value="posterior">Posterior (Laminectomy + Fusion)</option>
+                                <option value="combined">Combined Anterior-Posterior</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Levels</label>
+                            <select id="cervLevels">
+                                <option value="">Select...</option>
+                                <option value="1">1 Level</option>
+                                <option value="2">2 Levels</option>
+                                <option value="3">3 Levels</option>
+                                <option value="4+">4+ Levels</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lumbar section -->
+            <div id="manualLumbarSection" style="display:none;">
+                <div class="card-section" style="margin-top:24px;">
+                    <div class="card-section-title">Lumbar Parameters</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>
+                                Pelvic Incidence (PI)
+                                <span class="hint">Fixed anatomic parameter (&deg;). Measured from sacral endplate.</span>
+                            </label>
+                            <input type="number" id="pi" step="0.1" min="20" max="90" placeholder="e.g., 55">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                Lumbar Lordosis (LL)
+                                <span class="hint">L1&ndash;S1 Cobb angle (&deg;). Enter as positive value.</span>
+                            </label>
+                            <input type="number" id="ll" step="0.1" min="0" max="100" placeholder="e.g., 45">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                Sagittal Vertical Axis (SVA)
+                                <span class="hint">C7 plumbline to S1 posterior superior corner (mm)</span>
+                            </label>
+                            <input type="number" id="sva" step="0.1" placeholder="e.g., 50">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                Pelvic Tilt (PT)
+                                <span class="hint">Compensatory pelvic retroversion (&deg;)</span>
+                            </label>
+                            <input type="number" id="pt" step="0.1" min="0" max="50" placeholder="e.g., 22">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:16px;">
+                        <div class="param-card" id="piLlDisplay" style="max-width:400px;">
+                            <span class="param-label">PI-LL Mismatch (Auto-calculated)</span>
+                            <span class="param-value" id="piLlValue">--</span>
+                            <span class="param-range">Target: PI-LL within &plusmn;10&deg;</span>
+                        </div>
+                    </div>
+
+                    <div class="card-section">
+                        <div class="card-section-title">Lumbar Surgical Details</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Approach</label>
+                                <select id="lumbarApproach">
+                                    <option value="">Select...</option>
+                                    <option value="posterior">Posterior (PLIF / TLIF)</option>
+                                    <option value="lateral">Lateral (LLIF / DLIF)</option>
+                                    <option value="anterior">Anterior (ALIF)</option>
+                                    <option value="combined">Combined / 3-Column Osteotomy</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Levels</label>
+                                <select id="lumbarLevels">
+                                    <option value="">Select...</option>
+                                    <option value="1">1 Level</option>
+                                    <option value="2">2 Levels</option>
+                                    <option value="3">3 Levels</option>
+                                    <option value="4+">4+ Levels / Long Construct</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Osteotomy Planned</label>
+                                <select id="osteotomy">
+                                    <option value="">Select...</option>
+                                    <option value="none">None</option>
+                                    <option value="spo">SPO / Ponte</option>
+                                    <option value="pso">PSO (Pedicle Subtraction)</option>
+                                    <option value="vcr">VCR (Vertebral Column Resection)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="btn-group">
-                <button class="btn btn-outline" onclick="App.goToStep(2)">&larr; Back</button>
+                <button class="btn btn-outline" onclick="App.backFromManual()">&larr; Back</button>
                 <button class="btn btn-accent" onclick="App.computeAndShowCorrections()">Compute Correction Targets &rarr;</button>
             </div>
         </div>
     </div>
 
     <!-- ============================================ -->
-    <!-- STEP 4: Correction Targets                   -->
+    <!-- SCREEN: Correction Targets                    -->
     <!-- ============================================ -->
-    <div class="step-panel" id="step-4">
+    <div class="screen" id="screen-corrections">
         <div class="card">
             <div class="card-title">Computed Correction Targets</div>
             <div class="card-subtitle">Based on age-adjusted normative values and published alignment goals</div>
 
             <!-- Cervical Corrections -->
             <div id="cervicalResults" style="display:none;">
-                <h3 style="font-size:16px; font-weight:700; color:var(--primary); margin-bottom:16px; margin-top:8px;">
+                <h3 style="font-size:16px; font-weight:700; color:var(--accent); margin-bottom:16px; margin-top:8px;">
                     Cervical Spine Correction Targets
                 </h3>
                 <div class="results-grid" id="cervResultsGrid"></div>
-                <div class="card" style="background:#f8fafc; box-shadow:none; border:1px solid #e2e8f0; padding:16px;">
+                <div class="card" style="box-shadow:none; border:1px solid var(--border); padding:16px;">
                     <table class="summary-table">
                         <thead>
                             <tr>
@@ -346,11 +478,11 @@
 
             <!-- Lumbar Corrections -->
             <div id="lumbarResults" style="display:none;">
-                <h3 style="font-size:16px; font-weight:700; color:var(--primary); margin-bottom:16px; margin-top:24px;">
+                <h3 style="font-size:16px; font-weight:700; color:var(--accent); margin-bottom:16px; margin-top:24px;">
                     Lumbar Spine Correction Targets
                 </h3>
                 <div class="results-grid" id="lumbarResultsGrid"></div>
-                <div class="card" style="background:#f8fafc; box-shadow:none; border:1px solid #e2e8f0; padding:16px;">
+                <div class="card" style="box-shadow:none; border:1px solid var(--border); padding:16px;">
                     <table class="summary-table">
                         <thead>
                             <tr>
@@ -371,21 +503,21 @@
                 <span class="disclaimer-icon">&#9432;</span>
                 <div>
                     <strong>Note:</strong>
-                    <span id="ageNote">Correction targets are computed using age-adjusted Schwab-SRS classification thresholds and published cervical alignment norms. Patient-specific factors (bone quality, BMI, comorbidities) must be considered when planning the degree of correction.</span>
+                    <span id="ageNote">Correction targets are computed using age-adjusted Schwab-SRS classification thresholds and published cervical alignment norms.</span>
                 </div>
             </div>
 
             <div class="btn-group">
-                <button class="btn btn-outline" onclick="App.goToStep(3)">&larr; Modify Parameters</button>
+                <button class="btn btn-outline" onclick="App.goToScreen('manual')">&larr; Modify Parameters</button>
                 <button class="btn btn-accent" onclick="App.generateImplantRecs()">View Implant Recommendations &rarr;</button>
             </div>
         </div>
     </div>
 
     <!-- ============================================ -->
-    <!-- STEP 5: Implant Recommendations              -->
+    <!-- SCREEN: Implant Recommendations               -->
     <!-- ============================================ -->
-    <div class="step-panel" id="step-5">
+    <div class="screen" id="screen-implants">
         <div class="card">
             <div class="card-title">Ulrich Medical Implant Recommendations</div>
             <div class="card-subtitle">Based on deformity parameters, correction targets, surgical approach, and patient factors</div>
@@ -395,17 +527,17 @@
             <hr class="section-divider">
 
             <!-- Patient Factor Considerations -->
-            <div id="patientFactorNotes" class="card" style="background:#f8fafc; box-shadow:none; border:1px solid #e2e8f0;"></div>
+            <div id="patientFactorNotes" class="card" style="box-shadow:none; border:1px solid var(--border);"></div>
 
             <div class="btn-group" style="justify-content:space-between;">
                 <div class="toolbar">
-                    <button class="btn btn-outline" onclick="App.goToStep(4)">&larr; Back to Targets</button>
+                    <button class="btn btn-outline" onclick="App.goToScreen('corrections')">&larr; Back to Targets</button>
                 </div>
                 <div class="toolbar">
                     <button class="btn btn-outline btn-sm" onclick="App.exportCSV()">Export CSV</button>
                     <button class="btn btn-outline btn-sm" onclick="App.exportJSON()">Export JSON</button>
                     <button class="btn btn-outline btn-sm" onclick="App.printReport()">Print Report</button>
-                    <button class="btn btn-primary" onclick="App.resetAll()">New Case</button>
+                    <button class="btn btn-accent" onclick="App.resetAll()">New Case</button>
                 </div>
             </div>
         </div>
@@ -437,6 +569,7 @@
 <script src="js/lumbar.js"></script>
 <script src="js/corrections.js"></script>
 <script src="js/implants.js"></script>
+<script src="js/annotator.js"></script>
 <script src="js/app.js"></script>
 
 </body>
