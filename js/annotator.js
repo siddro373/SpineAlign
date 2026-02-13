@@ -38,14 +38,14 @@ const Annotator = {
 
     // Lumbar landmark indices:
     //   0: L1 Sup Ant    1: L1 Sup Post
-    //   2: S1 Sup Ant    3: S1 Sup Post    4: S1 Sup Mid
+    //   2: L5 Inf Ant    3: L5 Inf Post    4: S1 Sup Mid
     //   5: S1 Post-Sup   6: C7 Center
     //   7: FH Left       8: FH Right
     LUMBAR_LANDMARKS: [
         { id: 'l1_sup_ant',  label: 'L1 Superior Endplate (Anterior)',  short: 'L1 Sup Ant' },
         { id: 'l1_sup_post', label: 'L1 Superior Endplate (Posterior)', short: 'L1 Sup Post' },
-        { id: 's1_sup_ant',  label: 'S1 Superior Endplate (Anterior)',  short: 'S1 Sup Ant' },
-        { id: 's1_sup_post', label: 'S1 Superior Endplate (Posterior)', short: 'S1 Sup Post' },
+        { id: 'l5_inf_ant',  label: 'L5 Inferior Endplate (Anterior)',  short: 'L5 Inf Ant' },
+        { id: 'l5_inf_post', label: 'L5 Inferior Endplate (Posterior)', short: 'L5 Inf Post' },
         { id: 's1_sup_mid',  label: 'S1 Superior Endplate (Midpoint)',  short: 'S1 Sup Mid' },
         { id: 's1_post_sup', label: 'S1 Posterior-Superior Corner',     short: 'S1 Post-Sup' },
         { id: 'c7_centroid', label: 'C7 Centroid (on full-spine film)', short: 'C7 Center' },
@@ -363,7 +363,7 @@ const Annotator = {
     },
 
     // ---- Lumbar measurement lines ----
-    // Indices: 0=L1SupAnt, 1=L1SupPost, 2=S1SupAnt, 3=S1SupPost, 4=S1SupMid,
+    // Indices: 0=L1SupAnt, 1=L1SupPost, 2=L5InfAnt, 3=L5InfPost, 4=S1SupMid,
     //          5=S1PostSup, 6=C7Center, 7=FHLeft, 8=FHRight
     drawLumbarLines(ctx) {
         const lm = this.landmarks;
@@ -375,7 +375,7 @@ const Annotator = {
 
         // S1 superior endplate (2-3)
         if (lm.length >= 4) {
-            this.drawLine(ctx, lm[2], lm[3], 'S1 Sup');
+            this.drawLine(ctx, lm[2], lm[3], 'L5 Inf');
 
             // LL Cobb angle
             const angle = this.cobbAngle(lm[0], lm[1], lm[2], lm[3]);
@@ -394,7 +394,7 @@ const Annotator = {
             this.drawLabel(ctx, (lm[6].x + lm[5].x) / 2, lm[5].y - 8, `SVA: ${dist.toFixed(0)}px`);
         }
 
-        // PI and PT: need S1 Sup Ant(2), S1 Sup Post(3), S1 Sup Mid(4), FH Left(7), FH Right(8)
+        // PI and PT: need L5 Inf Ant(2), L5 Inf Post(3), S1 Sup Mid(4), FH Left(7), FH Right(8)
         if (lm.length >= 9) {
             const s1SupMid = lm[4]; // user-placed S1 Sup Mid
             // Hip center = midpoint of both femoral heads
@@ -413,7 +413,7 @@ const Annotator = {
             // Line 1: hip center → S1 Sup Mid
             this.drawDashedLine(ctx, hipCenter, s1SupMid, '');
 
-            // Line 2: S1 Sup Mid → perpendicular to S1 endplate (S1 Sup Ant → S1 Sup Post)
+            // Line 2: S1 Sup Mid → perpendicular to sacral endplate (L5 Inf Ant → L5 Inf Post)
             // Draw perpendicular in BOTH directions from S1 Sup Mid for visual clarity
             const epAngle = Math.atan2(lm[3].y - lm[2].y, lm[3].x - lm[2].x);
             const perp1 = epAngle - Math.PI / 2;
@@ -560,13 +560,13 @@ const Annotator = {
 
     // Pelvic Incidence: the SMALLER angle where two lines meet at S1 Sup Mid
     //   Line 1: S1 Sup Mid → hip center (midpoint of both femoral heads)
-    //   Line 2: S1 Sup Mid → perpendicular to S1 endplate (S1 Sup Ant → S1 Sup Post)
+    //   Line 2: S1 Sup Mid → perpendicular to sacral endplate (L5 Inf Ant → L5 Inf Post)
     // Reference: Legaye et al. — PI is the angle between the perpendicular to
     // the sacral endplate at its midpoint and the line from that midpoint to
     // the center of the femoral heads. Normal range: 35°–85°, mean ~55°.
-    computePI(s1_ant, s1_post, s1SupMid, hipCenter) {
-        // S1 endplate direction (anterior → posterior)
-        const epAngle = Math.atan2(s1_post.y - s1_ant.y, s1_post.x - s1_ant.x);
+    computePI(l5_ant, l5_post, s1SupMid, hipCenter) {
+        // Sacral endplate direction (anterior → posterior)
+        const epAngle = Math.atan2(l5_post.y - l5_ant.y, l5_post.x - l5_ant.x);
 
         // Perpendicular to endplate (two directions, 180° apart)
         const perp1 = epAngle - Math.PI / 2;
@@ -655,7 +655,7 @@ const Annotator = {
         return r;
     },
 
-    // Lumbar indices: 0=L1SupAnt, 1=L1SupPost, 2=S1SupAnt, 3=S1SupPost,
+    // Lumbar indices: 0=L1SupAnt, 1=L1SupPost, 2=L5InfAnt, 3=L5InfPost,
     //   4=S1SupMid, 5=S1PostSup, 6=C7Center, 7=FHLeft, 8=FHRight
     getLumbarResults() {
         const lm = this.landmarks;
@@ -672,7 +672,7 @@ const Annotator = {
             r.sva = this.overrides.sva != null ? this.overrides.sva : parseFloat(pxDist.toFixed(1));
         }
 
-        // PI and PT: need S1 Sup Ant(2), S1 Sup Post(3), S1 Sup Mid(4), FH Left(7), FH Right(8)
+        // PI and PT: need L5 Inf Ant(2), L5 Inf Post(3), S1 Sup Mid(4), FH Left(7), FH Right(8)
         if (lm.length >= 9) {
             const s1SupMid = lm[4];
             const hipCenter = this.midpoint(lm[7], lm[8]);

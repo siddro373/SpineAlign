@@ -46,6 +46,8 @@
         <span class="flow-step" data-screen="corrections">Targets</span>
         <span class="flow-separator">&rsaquo;</span>
         <span class="flow-step" data-screen="implants">Implants</span>
+        <span class="flow-separator">&rsaquo;</span>
+        <span class="flow-step" data-screen="plan">Plan</span>
     </div>
 
     <!-- ============================================ -->
@@ -70,89 +72,26 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- SCREEN: Patient Information                   -->
+    <!-- SCREEN: Patient Information (Flashcard)       -->
     <!-- ============================================ -->
     <div class="screen" id="screen-patient">
         <div class="card">
             <div class="card-title">Patient Information</div>
             <div class="card-subtitle">Enter anonymized patient demographics and clinical factors</div>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Age (years)</label>
-                    <input type="number" id="age" min="18" max="100" placeholder="e.g., 55">
-                </div>
-                <div class="form-group">
-                    <label>BMI (kg/m&sup2;)</label>
-                    <input type="number" id="bmi" step="0.1" min="10" max="60" placeholder="e.g., 28.5">
-                </div>
-                <div class="form-group">
-                    <label>
-                        Bone Quality
-                        <span class="hint">DEXA T-score or clinical assessment</span>
-                    </label>
-                    <select id="boneQuality">
-                        <option value="">Select...</option>
-                        <option value="normal">Normal (T-score &ge; -1.0)</option>
-                        <option value="osteopenia">Osteopenia (T-score -1.0 to -2.5)</option>
-                        <option value="osteoporosis">Osteoporosis (T-score &le; -2.5)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Smoking Status</label>
-                    <select id="smoking">
-                        <option value="">Select...</option>
-                        <option value="never">Never</option>
-                        <option value="former">Former</option>
-                        <option value="current">Current</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Primary Pathology</label>
-                    <select id="pathology">
-                        <option value="">Select...</option>
-                        <option value="degenerative">Degenerative / Spondylosis</option>
-                        <option value="deformity">Adult Spinal Deformity</option>
-                        <option value="trauma">Trauma / Fracture</option>
-                        <option value="tumor">Tumor / Metastatic</option>
-                        <option value="infection">Infection</option>
-                        <option value="revision">Revision Surgery</option>
-                    </select>
-                </div>
+            <!-- Flashcard progress bar -->
+            <div class="flashcard-progress">
+                <div class="flashcard-progress-bar" id="flashcardProgressBar"></div>
             </div>
+            <div class="flashcard-step-label" id="flashcardStepLabel">Step 1 of 8</div>
 
-            <!-- Optional Fields -->
-            <details class="optional-fields">
-                <summary>Additional Fields (Optional)</summary>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Patient Identifier <span class="hint">(Anonymized ID)</span></label>
-                        <input type="text" id="patientId" placeholder="e.g., PT-2024-001">
-                    </div>
-                    <div class="form-group">
-                        <label>Sex</label>
-                        <select id="sex">
-                            <option value="">Select...</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Previous Spine Surgery</label>
-                        <select id="prevSurgery">
-                            <option value="">Select...</option>
-                            <option value="none">None</option>
-                            <option value="cervical">Prior Cervical</option>
-                            <option value="lumbar">Prior Lumbar</option>
-                            <option value="both">Prior Cervical &amp; Lumbar</option>
-                        </select>
-                    </div>
-                </div>
-            </details>
+            <!-- Flashcard container (dynamically rendered) -->
+            <div class="flashcard-container" id="flashcardContainer"></div>
 
-            <div class="btn-group">
-                <button class="btn btn-outline" onclick="App.goToScreen('welcome')">&larr; Home</button>
-                <button class="btn btn-accent" onclick="App.savePatientAndNext()">Continue &rarr;</button>
+            <div class="btn-group flashcard-btn-group">
+                <button class="btn btn-outline" id="flashcardBackBtn" onclick="App.flashcardBack()">&larr; Home</button>
+                <button class="btn btn-outline" id="flashcardSkipBtn" onclick="App.flashcardSkip()" style="display:none;">Skip</button>
+                <button class="btn btn-accent" id="flashcardNextBtn" onclick="App.flashcardNext()">Next &rarr;</button>
             </div>
         </div>
     </div>
@@ -536,6 +475,63 @@
                 <div class="toolbar">
                     <button class="btn btn-outline btn-sm" onclick="App.exportCSV()">Export CSV</button>
                     <button class="btn btn-outline btn-sm" onclick="App.printReport()">Print Report</button>
+                    <button class="btn btn-accent" onclick="App.showPlanVisualization()">View Surgical Plan &rarr;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SCREEN: Surgical Plan Visualization           -->
+    <!-- ============================================ -->
+    <div class="screen" id="screen-plan">
+        <div class="card" style="padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div>
+                    <div class="card-title" style="margin-bottom:2px;">Surgical Plan Visualization</div>
+                    <div class="card-subtitle" style="margin-bottom:0;">Simulated postoperative alignment based on correction targets</div>
+                </div>
+                <div class="toolbar">
+                    <button class="btn btn-sm btn-outline" onclick="Planner.toggleOverlay()">Toggle Hardware</button>
+                    <button class="btn btn-sm btn-outline" onclick="Planner.toggleLabels()">Toggle Labels</button>
+                </div>
+            </div>
+
+            <div class="plan-layout">
+                <!-- Preop Side -->
+                <div class="plan-panel">
+                    <h3 class="plan-panel-title">Preoperative</h3>
+                    <div class="plan-canvas-wrap">
+                        <canvas id="planCanvasPreop"></canvas>
+                    </div>
+                </div>
+
+                <!-- Postop Side -->
+                <div class="plan-panel">
+                    <h3 class="plan-panel-title">Simulated Postoperative</h3>
+                    <div class="plan-canvas-wrap">
+                        <canvas id="planCanvasPostop"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parameter comparison table -->
+            <div id="planComparisonTable"></div>
+
+            <!-- Instrumentation legend -->
+            <div class="plan-legend" id="planLegend"></div>
+
+            <div class="info-box" style="margin-top:16px;">
+                This visualization is a schematic approximation. Actual postoperative alignment depends on
+                surgical technique, implant positioning, and patient-specific factors. This does NOT replace
+                intraoperative imaging or navigation. All correction targets must be validated by the treating surgeon.
+            </div>
+
+            <div class="btn-group" style="margin-top:12px;">
+                <button class="btn btn-outline" onclick="App.goToScreen('implants')">&larr; Back to Implants</button>
+                <div class="toolbar">
+                    <button class="btn btn-outline btn-sm" onclick="App.exportCSV()">Export CSV</button>
+                    <button class="btn btn-outline btn-sm" onclick="App.printReport()">Print Report</button>
                     <button class="btn btn-accent" onclick="App.resetAll()">New Case</button>
                 </div>
             </div>
@@ -579,6 +575,7 @@
 <script src="js/corrections.js"></script>
 <script src="js/implants.js"></script>
 <script src="js/annotator.js"></script>
+<script src="js/planner.js"></script>
 <script src="js/app.js"></script>
 
 </body>

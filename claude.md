@@ -1,7 +1,7 @@
 # SpineAlign — Ulrich Medical Surgical Planning Platform
 
 ## Project Overview
-SpineAlign is a web-based surgical planning tool for spine surgeons, powered by Ulrich Medical USA's implant catalog. It allows surgeons to input anonymized patient data, compute ideal deformity correction targets for cervical and lumbar spine surgeries, and receive implant recommendations matched to the clinical scenario.
+SpineAlign is a web-based surgical planning tool for spine surgeons, powered by Ulrich Medical USA's implant catalog. It allows surgeons to input anonymized patient data, compute ideal deformity correction targets for cervical and lumbar spine surgeries, receive implant recommendations matched to the clinical scenario, and visualize a simulated postoperative alignment plan.
 
 **Live URL:** https://siddro373.github.io/SpineAlign/
 **Repo:** github.com/siddro373/SpineAlign
@@ -11,46 +11,49 @@ SpineAlign is a web-based surgical planning tool for spine surgeons, powered by 
 - Vanilla HTML/CSS/JS — runs directly in the browser via `<script>` tags
 - All computation is client-side; no patient data leaves the browser
 - Dark navy/teal clinical theme with CSS custom properties
-- Screen-based navigation (`App.goToScreen()`) through a 7-screen flow
+- Screen-based navigation (`App.goToScreen()`) through a 9-screen flow
 - localStorage for saving/loading up to 50 cases
 - GitHub Pages deployment via GitHub Actions
 
 ## File Structure
 ```
 SpineAlign/
-├── index.html              # Main HTML — 7-screen single-page layout (~586 lines)
+├── index.html              # Main HTML — 9-screen single-page layout
 ├── css/
-│   └── styles.css          # All styles — dark theme, components, print, responsive (~1322 lines)
+│   └── styles.css          # All styles — dark theme, components, print, responsive
 ├── js/
-│   ├── app.js              # App state, screen navigation, file upload, case management (~707 lines)
-│   ├── annotator.js         # Canvas-based X-ray landmark annotation tool (~804 lines)
-│   ├── cervical.js          # Cervical deformity parameter logic & classification (~153 lines)
-│   ├── lumbar.js            # Lumbar deformity parameter logic & classification (~153 lines)
-│   ├── corrections.js       # Correction target computation engine (~73 lines)
-│   ├── implants.js          # Implant recommendation engine — Ulrich catalog (~442 lines)
-│   └── ui.js                # Shared UI builders (cards, tables, toasts, modals) (~105 lines)
+│   ├── app.js              # App state, screen navigation, flashcard patient input, case management
+│   ├── annotator.js        # Canvas-based X-ray landmark annotation tool
+│   ├── planner.js          # Postop plan visualization — side-by-side canvas rendering with instrumentation
+│   ├── cervical.js         # Cervical deformity parameter logic & classification
+│   ├── lumbar.js           # Lumbar deformity parameter logic & classification
+│   ├── corrections.js      # Correction target computation engine
+│   ├── implants.js         # Implant recommendation engine — Ulrich catalog
+│   └── ui.js               # Shared UI builders (cards, tables, toasts, modals)
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml       # GitHub Pages deployment workflow
-└── claude.md               # This file — project context for Claude
+│       └── deploy.yml      # GitHub Pages deployment workflow
+└── CLAUDE.md               # This file — project context for Claude
 ```
 
-## Application Flow (8 Screens)
+## Application Flow (9 Screens)
 1. **Welcome** (`screen-welcome`) — Greeting, "New Case" / "Saved Cases" CTAs, disclaimer
-2. **Patient** (`screen-patient`) — Age, BMI, bone quality, smoking, pathology, optional fields (ID, sex, prior surgery)
+2. **Patient** (`screen-patient`) — Flashcard-style one-field-at-a-time input: Age, BMI, Bone Quality, Smoking, Pathology, Patient ID (optional), Sex (optional), Previous Surgery (optional). Progress bar, slide animations, Enter key to advance, Skip for optional fields.
 3. **Region** (`screen-region`) — Select cervical, lumbar, or both
 4. **Upload** (`screen-upload`) — Drag & drop lateral/AP radiographs, or skip to manual entry
 5. **Annotate** (`screen-annotate`) — Canvas landmark placement tool with computed measurements sidebar
 6. **Manual** (`screen-manual`) — Manual entry/edit of spine parameters (CL, cSVA, T1S, CBVA, PI, LL, SVA, PT) + surgical details
 7. **Corrections** (`screen-corrections`) — Age-adjusted correction targets with parameter cards and summary table
-8. **Implants** (`screen-implants`) — Ulrich implant recommendations, patient factors, export options, Contact Representative CTA
+8. **Implants** (`screen-implants`) — Ulrich implant recommendations, patient factors, export options
+9. **Plan** (`screen-plan`) — Side-by-side preop vs. simulated postop X-ray visualization with superimposed instrumentation (screws, rods, cages), parameter comparison table, legend, Contact Representative CTA
 
 ## Key JavaScript Objects
 
 ### `App` (js/app.js)
-- **State:** `currentScreen`, `patientData`, `cervicalData`, `lumbarData`, `correctionResults`, `implantRecs`, `regionCervical`, `regionLumbar`, `uploadedImages`, `cameFromAnnotation`
-- **Navigation:** `goToScreen(name)` — shows/hides screens, updates flow progress breadcrumb
-- **Flow:** `savePatientAndNext()`, `toggleRegion()`, `saveRegionAndNext()`, `proceedToAnnotation()`, `skipToManual()`, `computeAndShowCorrections()`, `generateImplantRecs()`
+- **State:** `currentScreen`, `patientData`, `cervicalData`, `lumbarData`, `correctionResults`, `implantRecs`, `regionCervical`, `regionLumbar`, `uploadedImages`, `cameFromAnnotation`, `flashcardIndex`, `flashcardValues`
+- **Navigation:** `goToScreen(name)` — shows/hides screens, updates flow progress breadcrumb, initializes flashcards when entering patient screen
+- **Flashcard system:** `flashcardConfig[]` (8 field definitions), `initFlashcards()`, `renderFlashcard()`, `flashcardNext()`, `flashcardBack()`, `flashcardSkip()`, `finalizePatientData()`
+- **Flow:** `toggleRegion()`, `saveRegionAndNext()`, `proceedToAnnotation()`, `skipToManual()`, `computeAndShowCorrections()`, `generateImplantRecs()`, `showPlanVisualization()`
 - **File handling:** `handleDragOver/Leave/Drop()`, `handleFileSelect()`, `loadImagePreview()`, `removeImage()`
 - **Annotation bridge:** `startAnnotation()`, `acceptAnnotationAndCompute()`, `populateManualFromAnnotation()`
 - **Persistence:** `saveCase()`, `loadCase(idx)`, `deleteCase(idx)`, `loadCaseList()`
@@ -60,10 +63,22 @@ SpineAlign/
 ### `Annotator` (js/annotator.js)
 - Canvas-based landmark annotation with click-to-place, drag-to-adjust
 - **Cervical mode:** 10 landmarks → computes CL, cSVA, T1S, CBVA
-- **Lumbar mode:** 8 landmarks → computes LL, SVA, PI, PT
+- **Lumbar mode:** 9 landmarks → computes LL, SVA, PI, PT
+  - Lumbar landmarks: L1 Sup Ant, L1 Sup Post, L5 Inf Ant, L5 Inf Post, S1 Sup Mid, S1 Post-Sup, C7 Center, FH Left, FH Right
 - **Geometry functions:** `cobbAngle()`, `lineAngle()`, `angleToVertical()`, `horizontalOffset()`, `perpendicularAngle()`, `midpoint()`, `distance()`, `computePI()`, `computePT()`
 - **Rendering:** Image display, landmark dots with labels, measurement lines, angle arcs
 - **Controls:** Undo, clear, zoom in/out, manual override inputs for distance measurements (SVA/cSVA in mm)
+
+### `Planner` (js/planner.js)
+- Canvas-based postop plan visualization (UNiD-inspired side-by-side comparison)
+- **Init:** `init(imageSrc, landmarks, landmarkDefs, region, cervData, lumbarData, corrections, implantRecs, patientData)`
+- **Preop canvas:** Dimmed X-ray + current alignment lines (red) + SVA plumbline + parameter labels
+- **Postop canvas:** Dimmed X-ray + corrected alignment (green) + instrumentation overlay
+- **Correction algorithm:** `computePostopLandmarks()` — transforms landmarks based on SVA delta (horizontal shift) and LL/CL delta (rotation around pivot)
+- **Instrumentation drawing:** `_drawPedicleScrew()` (shaft + tulip head + threads), `_drawRod()` (smooth curve through screw heads), `_drawCage()` (rounded rectangle with graft window)
+- **Supporting:** `renderComparisonTable()`, `renderLegend()`, `toggleOverlay()`, `toggleLabels()`
+- **Pixel scale estimation:** `_estimatePixelScale()` — uses anatomic landmark distances (L1-S1 ~150mm, C2-C7 ~100mm) to approximate pixels-per-mm
+- **Graceful fallback:** Works without X-ray data (dark background + parameter labels only)
 
 ### `UI` (js/ui.js)
 - `paramCard()`, `summaryRow()`, `implantCard()`, `factorNote()` — HTML builders
@@ -97,20 +112,24 @@ SpineAlign/
 - `.header` — Sticky dark gradient header with brand + action buttons
 - `.welcome-screen` — Centered welcome with logo, greeting, CTAs
 - `.card` — Dark elevated cards with border and shadow
+- `.flashcard-*` — Flashcard patient input system: progress bar, slide-in/out animations, centered large inputs
 - `.region-card` / `.upload-dropzone` — Interactive selection cards
 - `.annotator-layout` — Two-column grid (canvas + sidebar)
 - `.flow-progress` — Breadcrumb step indicators
 - `.param-card` — Color-coded parameter display cards (success/warning/danger)
 - `.implant-card` — Implant recommendation cards with features and rationale
+- `.plan-layout` — Two-column grid for side-by-side preop/postop canvases
+- `.plan-panel` / `.plan-canvas-wrap` — Panel containers for plan visualization canvases
+- `.plan-legend` — Color-coded legend with instrument swatches and recommended implant pills
 - `.btn-contact-rep` — Large gradient CTA button for contacting Ulrich representative
 - `.summary-table` — Correction target comparison tables
 
 ### Responsive Breakpoints
-- **≤768px (tablet):** Single-column grids, hidden header badge, compact buttons, horizontal scroll for breadcrumb and tables, stacked button groups
-- **≤480px (mobile):** Auto-height header with flex-wrap, smaller logo/fonts, stacked welcome buttons, compact forms/cards/inputs, smaller contact CTA, full-width toasts/modals
+- **≤768px (tablet):** Single-column grids, hidden header badge, compact buttons, horizontal scroll for breadcrumb and tables, stacked button groups, plan layout stacks vertically
+- **≤480px (mobile):** Auto-height header with flex-wrap, smaller logo/fonts, stacked welcome buttons, compact forms/cards/inputs, smaller contact CTA, full-width toasts/modals, compact flashcard inputs
 
 ### Print Styles
-- Overrides to white background, hides navigation/buttons/toasts, shows all screens
+- Overrides to white background, hides navigation/buttons/toasts/flashcard buttons, shows all screens, plan layout preserves side-by-side
 
 ## Clinical Knowledge
 
@@ -125,6 +144,19 @@ SpineAlign/
 2. **Sagittal Vertical Axis (SVA):** C7 plumbline to S1 posterior superior corner (mm). Age-adjusted targets per Schwab-SRS.
 3. **PI-LL Mismatch:** PI minus Lumbar Lordosis. Age-adjusted target (younger < 10°, elderly < 15°).
 4. **Pelvic Tilt (PT):** Compensatory pelvic retroversion indicator.
+
+### Lumbar Annotation Landmarks (9 total)
+| Index | ID | Short Label | Description |
+|-------|----|-------------|-------------|
+| 0 | l1_sup_ant | L1 Sup Ant | L1 Superior Endplate (Anterior) |
+| 1 | l1_sup_post | L1 Sup Post | L1 Superior Endplate (Posterior) |
+| 2 | l5_inf_ant | L5 Inf Ant | L5 Inferior Endplate (Anterior) |
+| 3 | l5_inf_post | L5 Inf Post | L5 Inferior Endplate (Posterior) |
+| 4 | s1_sup_mid | S1 Sup Mid | S1 Superior Endplate (Midpoint) |
+| 5 | s1_post_sup | S1 Post-Sup | S1 Posterior-Superior Corner |
+| 6 | c7_centroid | C7 Center | C7 Centroid (on full-spine film) |
+| 7 | fh_left | FH Left | Left Femoral Head Center |
+| 8 | fh_right | FH Right | Right Femoral Head Center |
 
 ### Age-Adjusted Correction Targets (Schwab-SRS / Lafage)
 | Age Group | Target SVA | Target PT | Target PI-LL |
@@ -182,6 +214,7 @@ SpineAlign/
 - This is a surgical planning aid, NOT a diagnostic tool
 - All correction targets must be validated by the treating surgeon
 - The implant recommendations are suggestions based on published literature and Ulrich Medical's catalog — final implant selection is the surgeon's responsibility
+- The postop plan visualization is a schematic approximation — does NOT replace intraoperative imaging or navigation
 - No patient data is transmitted or stored externally; all computation is browser-side
 - Product details sourced from ulrichmedicalusa.com
 - Contact Representative button opens `mailto:` with full surgical plan summary

@@ -46,6 +46,11 @@ const App = {
         // Update breadcrumb active state
         this.updateBreadcrumb(name);
 
+        // Initialize flashcard system when entering patient screen
+        if (name === 'patient') {
+            this.initFlashcards();
+        }
+
         // Show/hide manual sections based on region
         if (name === 'manual') {
             this.showManualSections();
@@ -75,18 +80,144 @@ const App = {
     },
 
     // =============================================
-    // PATIENT INFO
+    // PATIENT INFO (Flashcard system)
     // =============================================
-    savePatientAndNext() {
+    flashcardConfig: [
+        { inputId: 'age',         type: 'number', required: true,  label: 'Age', hint: 'Patient age at time of surgery (years)', placeholder: 'e.g., 55', attrs: 'min="18" max="100"' },
+        { inputId: 'bmi',         type: 'number', required: true,  label: 'BMI', hint: 'Body mass index (kg/m\u00B2)', placeholder: 'e.g., 28.5', attrs: 'step="0.1" min="10" max="60"' },
+        { inputId: 'boneQuality', type: 'select', required: true,  label: 'Bone Quality', hint: 'DEXA T-score or clinical assessment', options: [['','Select...'],['normal','Normal (T-score \u2265 -1.0)'],['osteopenia','Osteopenia (T-score -1.0 to -2.5)'],['osteoporosis','Osteoporosis (T-score \u2264 -2.5)']] },
+        { inputId: 'smoking',     type: 'select', required: true,  label: 'Smoking Status', hint: 'Current tobacco use', options: [['','Select...'],['never','Never'],['former','Former'],['current','Current']] },
+        { inputId: 'pathology',   type: 'select', required: true,  label: 'Primary Pathology', hint: 'Principal surgical indication', options: [['','Select...'],['degenerative','Degenerative / Spondylosis'],['deformity','Adult Spinal Deformity'],['trauma','Trauma / Fracture'],['tumor','Tumor / Metastatic'],['infection','Infection'],['revision','Revision Surgery']] },
+        { inputId: 'patientId',   type: 'text',   required: false, label: 'Patient Identifier', hint: 'Anonymized ID (optional)', placeholder: 'e.g., PT-2024-001' },
+        { inputId: 'sex',         type: 'select', required: false, label: 'Sex', hint: 'Biological sex (optional)', options: [['','Select...'],['male','Male'],['female','Female']] },
+        { inputId: 'prevSurgery', type: 'select', required: false, label: 'Previous Spine Surgery', hint: 'Prior surgical history (optional)', options: [['','Select...'],['none','None'],['cervical','Prior Cervical'],['lumbar','Prior Lumbar'],['both','Prior Cervical & Lumbar']] }
+    ],
+    flashcardIndex: 0,
+    flashcardValues: {},
+
+    initFlashcards() {
+        this.flashcardIndex = 0;
+        // Don't reset values if they already exist (e.g., coming back from region)
+        if (!this.flashcardValues || Object.keys(this.flashcardValues).length === 0) {
+            this.flashcardValues = {};
+        }
+        this.renderFlashcard();
+    },
+
+    renderFlashcard() {
+        const config = this.flashcardConfig[this.flashcardIndex];
+        const container = document.getElementById('flashcardContainer');
+        const total = this.flashcardConfig.length;
+        const current = this.flashcardIndex + 1;
+
+        // Update progress
+        document.getElementById('flashcardProgressBar').style.width = ((current / total) * 100) + '%';
+        document.getElementById('flashcardStepLabel').textContent = `Step ${current} of ${total}`;
+
+        // Build input HTML
+        let inputHtml;
+        const savedVal = this.flashcardValues[config.inputId] || '';
+
+        if (config.type === 'select') {
+            const optionsHtml = config.options.map(o =>
+                `<option value="${o[0]}" ${savedVal === o[0] ? 'selected' : ''}>${o[1]}</option>`
+            ).join('');
+            inputHtml = `<select id="${config.inputId}" class="flashcard-input">${optionsHtml}</select>`;
+        } else {
+            inputHtml = `<input type="${config.type}" id="${config.inputId}" class="flashcard-input" placeholder="${config.placeholder || ''}" value="${savedVal}" ${config.attrs || ''}>`;
+        }
+
+        container.innerHTML = `
+            <div class="flashcard flashcard-slide-in">
+                <div class="flashcard-label">${config.label}</div>
+                <div class="flashcard-hint">${config.hint}</div>
+                ${!config.required ? '<div class="flashcard-optional">Optional</div>' : ''}
+                <div class="flashcard-input-wrap">${inputHtml}</div>
+            </div>
+        `;
+
+        // Focus input and add Enter key listener
+        const inputEl = document.getElementById(config.inputId);
+        if (inputEl) {
+            setTimeout(() => inputEl.focus(), 300);
+            inputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') this.flashcardNext();
+            });
+        }
+
+        // Update buttons
+        document.getElementById('flashcardBackBtn').innerHTML = this.flashcardIndex === 0 ? '&larr; Home' : '&larr; Back';
+        document.getElementById('flashcardSkipBtn').style.display = config.required ? 'none' : '';
+        document.getElementById('flashcardNextBtn').innerHTML = this.flashcardIndex === total - 1 ? 'Continue &rarr;' : 'Next &rarr;';
+    },
+
+    flashcardNext() {
+        const config = this.flashcardConfig[this.flashcardIndex];
+        const inputEl = document.getElementById(config.inputId);
+        const value = inputEl ? inputEl.value : '';
+
+        // Validate required fields
+        if (config.required && !value) {
+            UI.toast(`Please fill in ${config.label}.`, 'error');
+            if (inputEl) inputEl.classList.add('invalid');
+            return;
+        }
+
+        // Store value
+        this.flashcardValues[config.inputId] = value;
+
+        if (this.flashcardIndex < this.flashcardConfig.length - 1) {
+            // Animate out and show next
+            const card = document.querySelector('.flashcard');
+            if (card) card.classList.add('flashcard-slide-out');
+            setTimeout(() => {
+                this.flashcardIndex++;
+                this.renderFlashcard();
+            }, 250);
+        } else {
+            // All cards done
+            this.finalizePatientData();
+        }
+    },
+
+    flashcardBack() {
+        if (this.flashcardIndex === 0) {
+            this.goToScreen('welcome');
+            return;
+        }
+        // Save current value before going back
+        const config = this.flashcardConfig[this.flashcardIndex];
+        const inputEl = document.getElementById(config.inputId);
+        if (inputEl) this.flashcardValues[config.inputId] = inputEl.value;
+
+        const card = document.querySelector('.flashcard');
+        if (card) card.classList.add('flashcard-slide-back');
+        setTimeout(() => {
+            this.flashcardIndex--;
+            this.renderFlashcard();
+        }, 200);
+    },
+
+    flashcardSkip() {
+        this.flashcardValues[this.flashcardConfig[this.flashcardIndex].inputId] = '';
+        if (this.flashcardIndex < this.flashcardConfig.length - 1) {
+            this.flashcardIndex++;
+            this.renderFlashcard();
+        } else {
+            this.finalizePatientData();
+        }
+    },
+
+    finalizePatientData() {
         this.patientData = {
-            id:          document.getElementById('patientId').value || 'Unspecified',
-            age:         parseFloat(document.getElementById('age').value),
-            bmi:         parseFloat(document.getElementById('bmi').value),
-            sex:         document.getElementById('sex').value,
-            boneQuality: document.getElementById('boneQuality').value,
-            pathology:   document.getElementById('pathology').value,
-            smoking:     document.getElementById('smoking').value,
-            prevSurgery: document.getElementById('prevSurgery').value
+            id:          this.flashcardValues.patientId || 'Unspecified',
+            age:         parseFloat(this.flashcardValues.age),
+            bmi:         parseFloat(this.flashcardValues.bmi),
+            sex:         this.flashcardValues.sex || '',
+            boneQuality: this.flashcardValues.boneQuality || '',
+            pathology:   this.flashcardValues.pathology || '',
+            smoking:     this.flashcardValues.smoking || '',
+            prevSurgery: this.flashcardValues.prevSurgery || ''
         };
 
         if (!this.patientData.age || !this.patientData.bmi || !this.patientData.boneQuality) {
@@ -379,6 +510,27 @@ const App = {
     },
 
     // =============================================
+    // PLAN VISUALIZATION
+    // =============================================
+    showPlanVisualization() {
+        // Determine the region that was annotated
+        const region = this.regionCervical ? 'cervical' : 'lumbar';
+
+        Planner.init(
+            this.uploadedImages.lateral,
+            Annotator.landmarks,
+            Annotator.landmarkDefs,
+            region,
+            this.cervicalData,
+            this.lumbarData,
+            this.correctionResults,
+            this.implantRecs,
+            this.patientData
+        );
+        this.goToScreen('plan');
+    },
+
+    // =============================================
     // CASE SAVE / LOAD (localStorage)
     // =============================================
     getSavedCases() {
@@ -420,15 +572,17 @@ const App = {
         this.regionCervical = c.regionCervical || !!c.patient.regionCervical;
         this.regionLumbar = c.regionLumbar || !!c.patient.regionLumbar;
 
-        // Populate patient fields
-        document.getElementById('patientId').value = c.patient.id || '';
-        document.getElementById('age').value = c.patient.age || '';
-        document.getElementById('bmi').value = c.patient.bmi || '';
-        document.getElementById('sex').value = c.patient.sex || '';
-        document.getElementById('boneQuality').value = c.patient.boneQuality || '';
-        document.getElementById('pathology').value = c.patient.pathology || '';
-        document.getElementById('smoking').value = c.patient.smoking || '';
-        document.getElementById('prevSurgery').value = c.patient.prevSurgery || '';
+        // Populate flashcard values from loaded case
+        this.flashcardValues = {
+            age: c.patient.age != null ? String(c.patient.age) : '',
+            bmi: c.patient.bmi != null ? String(c.patient.bmi) : '',
+            boneQuality: c.patient.boneQuality || '',
+            smoking: c.patient.smoking || '',
+            pathology: c.patient.pathology || '',
+            patientId: c.patient.id || '',
+            sex: c.patient.sex || '',
+            prevSurgery: c.patient.prevSurgery || ''
+        };
 
         // Update region cards
         document.getElementById('regionCardCervical').classList.toggle('selected', this.regionCervical);
@@ -680,6 +834,8 @@ const App = {
         this.correctionResults = { cervical: null, lumbar: null };
         this.implantRecs = [];
         this.cameFromAnnotation = false;
+        this.flashcardValues = {};
+        this.flashcardIndex = 0;
 
         this.goToScreen('welcome');
     },
