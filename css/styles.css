@@ -1262,10 +1262,10 @@ select.flashcard-input option {
 /* =============================================
    SURGICAL PLAN VISUALIZATION
    ============================================= */
-.plan-layout {
+.plan-layout-3 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
     margin-bottom: 20px;
 }
 .plan-panel {
@@ -1275,15 +1275,78 @@ select.flashcard-input option {
     overflow: hidden;
 }
 .plan-panel-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 12px 16px;
+    padding: 10px 14px;
     background: var(--card-bg);
     border-bottom: 1px solid var(--border);
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.plan-panel-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+/* Surgical Steps */
+.plan-steps-section {
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.plan-step {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+}
+.plan-step:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.plan-step-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    background: rgba(74, 158, 173, 0.12);
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+}
+.plan-step-body {
+    flex: 1;
+}
+.plan-step-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+.plan-step-detail {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
 }
 .plan-canvas-wrap {
     position: relative;
@@ -1358,8 +1421,9 @@ select.flashcard-input option {
     .flow-progress, .btn-group, .welcome-disclaimer,
     .toast-container, .modal-overlay, .annotator-toolbar,
     .btn-contact-rep, .flashcard-btn-group { display: none !important; }
-    .plan-layout { grid-template-columns: 1fr 1fr; }
+    .plan-layout-3 { grid-template-columns: 1fr 1fr 1fr; }
     .plan-panel { break-inside: avoid; }
+    .plan-step { break-inside: avoid; }
     .screen { display: block !important; }
     .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; background: white; }
     .implant-card { break-inside: avoid; background: white; }
@@ -1402,8 +1466,9 @@ select.flashcard-input option {
     .implant-header { flex-direction: column; align-items: flex-start; }
 
     /* Plan layout */
-    .plan-layout { grid-template-columns: 1fr; }
+    .plan-layout-3 { grid-template-columns: 1fr; }
     .plan-legend-grid { gap: 10px; }
+    .plan-step-detail { font-size: 12px; }
 }
 
 /* --- Mobile (≤ 480px) --- */

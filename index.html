@@ -485,49 +485,57 @@
     <!-- SCREEN: Surgical Plan Visualization           -->
     <!-- ============================================ -->
     <div class="screen" id="screen-plan">
-        <div class="card" style="padding:16px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <div>
-                    <div class="card-title" style="margin-bottom:2px;">Surgical Plan Visualization</div>
-                    <div class="card-subtitle" style="margin-bottom:0;">Simulated postoperative alignment based on correction targets</div>
-                </div>
-                <div class="toolbar">
-                    <button class="btn btn-sm btn-outline" onclick="Planner.toggleOverlay()">Toggle Hardware</button>
-                    <button class="btn btn-sm btn-outline" onclick="Planner.toggleLabels()">Toggle Labels</button>
-                </div>
-            </div>
+        <div class="card" style="padding:20px;">
+            <div class="card-title" style="margin-bottom:2px;">Surgical Plan</div>
+            <div class="card-subtitle" style="margin-bottom:16px;">Step-by-step operative strategy with simulated correction</div>
 
-            <div class="plan-layout">
-                <!-- Preop Side -->
+            <!-- 3-Panel Visualization -->
+            <div class="plan-layout-3">
+                <!-- Panel 1: Preop -->
                 <div class="plan-panel">
-                    <h3 class="plan-panel-title">Preoperative</h3>
+                    <h3 class="plan-panel-title"><span class="plan-panel-num">1</span> Preoperative</h3>
                     <div class="plan-canvas-wrap">
                         <canvas id="planCanvasPreop"></canvas>
                     </div>
                 </div>
 
-                <!-- Postop Side -->
+                <!-- Panel 2: Strategy -->
                 <div class="plan-panel">
-                    <h3 class="plan-panel-title">Simulated Postoperative</h3>
+                    <h3 class="plan-panel-title"><span class="plan-panel-num">2</span> Surgical Strategy</h3>
+                    <div class="plan-canvas-wrap">
+                        <canvas id="planCanvasStrategy"></canvas>
+                    </div>
+                </div>
+
+                <!-- Panel 3: Postop -->
+                <div class="plan-panel">
+                    <h3 class="plan-panel-title"><span class="plan-panel-num">3</span> Corrected Postop</h3>
                     <div class="plan-canvas-wrap">
                         <canvas id="planCanvasPostop"></canvas>
                     </div>
                 </div>
             </div>
 
+            <!-- Surgical Steps (step-by-step text plan) -->
+            <div class="plan-steps-section">
+                <div class="card-section-title" style="margin-bottom:12px;">Operative Steps</div>
+                <div id="planStepsContainer"></div>
+            </div>
+
             <!-- Parameter comparison table -->
-            <div id="planComparisonTable"></div>
+            <div id="planComparisonTable" style="margin-top:16px;"></div>
 
             <!-- Instrumentation legend -->
             <div class="plan-legend" id="planLegend"></div>
 
             <div class="info-box" style="margin-top:16px;">
-                This visualization is a schematic approximation. Actual postoperative alignment depends on
-                surgical technique, implant positioning, and patient-specific factors. This does NOT replace
-                intraoperative imaging or navigation. All correction targets must be validated by the treating surgeon.
+                This plan is a schematic approximation generated from radiographic measurements and published correction targets.
+                Actual postoperative alignment depends on surgical technique, implant positioning, and patient-specific anatomy.
+                This does NOT replace intraoperative imaging, navigation, or clinical judgment.
+                All correction targets must be validated by the treating surgeon.
             </div>
 
-            <div class="btn-group" style="margin-top:12px;">
+            <div class="btn-group" style="margin-top:16px;">
                 <button class="btn btn-outline" onclick="App.goToScreen('implants')">&larr; Back to Implants</button>
                 <div class="toolbar">
                     <button class="btn btn-outline btn-sm" onclick="App.exportCSV()">Export CSV</button>

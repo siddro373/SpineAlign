@@ -45,7 +45,7 @@ SpineAlign/
 6. **Manual** (`screen-manual`) — Manual entry/edit of spine parameters (CL, cSVA, T1S, CBVA, PI, LL, SVA, PT) + surgical details
 7. **Corrections** (`screen-corrections`) — Age-adjusted correction targets with parameter cards and summary table
 8. **Implants** (`screen-implants`) — Ulrich implant recommendations, patient factors, export options
-9. **Plan** (`screen-plan`) — Side-by-side preop vs. simulated postop X-ray visualization with superimposed instrumentation (screws, rods, cages), parameter comparison table, legend, Contact Representative CTA
+9. **Plan** (`screen-plan`) — 3-panel surgical plan: (1) Preoperative X-ray with alignment measurements, (2) Surgical Strategy with correction vectors, cage planning zones, endplate outlines, angle arcs, osteotomy markers, (3) Corrected Postop with superimposed instrumentation (screws, rods, cages) and corrected alignment. Below: step-by-step operative instructions, parameter comparison table, legend, Contact Representative CTA
 
 ## Key JavaScript Objects
 
@@ -70,13 +70,14 @@ SpineAlign/
 - **Controls:** Undo, clear, zoom in/out, manual override inputs for distance measurements (SVA/cSVA in mm)
 
 ### `Planner` (js/planner.js)
-- Canvas-based postop plan visualization (UNiD-inspired side-by-side comparison)
+- 3-panel canvas-based surgical plan visualization
 - **Init:** `init(imageSrc, landmarks, landmarkDefs, region, cervData, lumbarData, corrections, implantRecs, patientData)`
-- **Preop canvas:** Dimmed X-ray + current alignment lines (red) + SVA plumbline + parameter labels
-- **Postop canvas:** Dimmed X-ray + corrected alignment (green) + instrumentation overlay
-- **Correction algorithm:** `computePostopLandmarks()` — transforms landmarks based on SVA delta (horizontal shift) and LL/CL delta (rotation around pivot)
-- **Instrumentation drawing:** `_drawPedicleScrew()` (shaft + tulip head + threads), `_drawRod()` (smooth curve through screw heads), `_drawCage()` (rounded rectangle with graft window)
-- **Supporting:** `renderComparisonTable()`, `renderLegend()`, `toggleOverlay()`, `toggleLabels()`
+- **Panel 1 — Preop:** Dimmed X-ray + current alignment curve (red) + SVA plumbline + preop measurement tags
+- **Panel 2 — Surgical Strategy:** Dimmed X-ray + preop alignment (faded red) + target alignment curve (gold) + correction vectors (dashed arrows) + endplate outlines + cage planning zones (blue boxes) + LL angle arcs + SVA correction indicator + osteotomy site marker + target values
+- **Panel 3 — Corrected Postop:** Dimmed X-ray + corrected alignment (green) + bilateral rods + pedicle screws (shaft + tulip + threads) + interbody cages + corrected plumbline + postop measurement tags
+- **Surgical Steps:** `renderSurgicalSteps()` — generates step-by-step operative instructions (positioning, decompression, cage placement, screw instrumentation, rod contouring, intraop confirmation) based on approach, levels, osteotomy, implant recs, and patient factors
+- **Correction algorithm:** `_computePostopLandmarks()` — transforms landmarks based on SVA delta (horizontal shift) and LL/CL delta (rotation around pivot)
+- **Supporting:** `renderComparisonTable()`, `renderLegend()`
 - **Pixel scale estimation:** `_estimatePixelScale()` — uses anatomic landmark distances (L1-S1 ~150mm, C2-C7 ~100mm) to approximate pixels-per-mm
 - **Graceful fallback:** Works without X-ray data (dark background + parameter labels only)
 
@@ -118,7 +119,9 @@ SpineAlign/
 - `.flow-progress` — Breadcrumb step indicators
 - `.param-card` — Color-coded parameter display cards (success/warning/danger)
 - `.implant-card` — Implant recommendation cards with features and rationale
-- `.plan-layout` — Two-column grid for side-by-side preop/postop canvases
+- `.plan-layout-3` — Three-column grid for preop / strategy / postop canvases
+- `.plan-step` / `.plan-step-num` / `.plan-step-title` / `.plan-step-detail` — Step-by-step operative instructions
+- `.plan-steps-section` — Container for surgical steps
 - `.plan-panel` / `.plan-canvas-wrap` — Panel containers for plan visualization canvases
 - `.plan-legend` — Color-coded legend with instrument swatches and recommended implant pills
 - `.btn-contact-rep` — Large gradient CTA button for contacting Ulrich representative
