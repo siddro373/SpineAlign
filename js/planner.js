@@ -104,6 +104,9 @@ const Planner = {
         this.ctxs.strategy = this.canvases.strategy.getContext('2d');
         this.ctxs.postop   = this.canvases.postop.getContext('2d');
 
+        // Attach double-click fullscreen handlers
+        this._initFullscreen();
+
         if (imageSrc && this.landmarks.length >= 4) {
             this.image = new Image();
             this.image.onload = () => {
@@ -127,6 +130,144 @@ const Planner = {
         this.renderSurgicalSteps();
         this.renderComparisonTable();
         this.renderLegend();
+    },
+
+    // =============================================
+    // FULLSCREEN TOGGLE (double-click)
+    // =============================================
+    _fullscreenOverlay: null,
+
+    _initFullscreen() {
+        // Remove old listeners by replacing canvases' parent wraps with clones
+        // (simple way to avoid duplicate listeners on re-init)
+        ['preop', 'strategy', 'postop'].forEach(key => {
+            const canvas = this.canvases[key];
+            if (!canvas) return;
+            // Use the canvas-wrap div as the click target
+            const wrap = canvas.closest('.plan-canvas-wrap');
+            if (!wrap) return;
+            // Store reference for handler
+            wrap._plannerKey = key;
+            wrap.style.cursor = 'zoom-in';
+            wrap.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                this._openFullscreen(key);
+            }, { once: false });
+        });
+    },
+
+    _openFullscreen(canvasKey) {
+        // Create overlay if it doesn't exist
+        if (!this._fullscreenOverlay) {
+            const overlay = document.createElement('div');
+            overlay.className = 'plan-fullscreen-overlay';
+            overlay.innerHTML = `
+                <div class="plan-fullscreen-header">
+                    <span class="plan-fullscreen-title"></span>
+                    <span class="plan-fullscreen-hint">Double-click to exit</span>
+                </div>
+                <canvas class="plan-fullscreen-canvas"></canvas>
+            `;
+            document.body.appendChild(overlay);
+            this._fullscreenOverlay = overlay;
+
+            // Double-click on overlay to close
+            overlay.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                this._closeFullscreen();
+            });
+
+            // Escape key to close
+            this._escHandler = (e) => {
+                if (e.key === 'Escape') this._closeFullscreen();
+            };
+        }
+
+        const overlay = this._fullscreenOverlay;
+        const fsCanvas = overlay.querySelector('.plan-fullscreen-canvas');
+        const titleEl = overlay.querySelector('.plan-fullscreen-title');
+
+        // Set title
+        const titles = { preop: 'Preoperative', strategy: 'Surgical Strategy', postop: 'Corrected Postop' };
+        titleEl.textContent = titles[canvasKey] || '';
+
+        // Size the fullscreen canvas to fill viewport
+        const vw = window.innerWidth;
+        const vh = window.innerHeight - 50; // leave room for header bar
+        const dpr = window.devicePixelRatio || 1;
+
+        let drawW, drawH;
+        if (this.image) {
+            const aspect = this.image.width / this.image.height;
+            if (vw / vh > aspect) {
+                drawH = vh;
+                drawW = vh * aspect;
+            } else {
+                drawW = vw;
+                drawH = vw / aspect;
+            }
+        } else {
+            drawW = vw;
+            drawH = vh;
+        }
+
+        fsCanvas.width = drawW * dpr;
+        fsCanvas.height = drawH * dpr;
+        fsCanvas.style.width = drawW + 'px';
+        fsCanvas.style.height = drawH + 'px';
+
+        const fsCtx = fsCanvas.getContext('2d');
+        fsCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        // Save current state and temporarily render at fullscreen size
+        const origW = this.canvasW;
+        const origH = this.canvasH;
+        this.canvasW = drawW;
+        this.canvasH = drawH;
+
+        // Temporarily scale landmarks
+        const scaleX = drawW / origW;
+        const scaleY = drawH / origH;
+        const origLandmarks = this.landmarks.map(l => ({ x: l.x, y: l.y }));
+        this.landmarks = this.landmarks.map(l => ({ x: l.x * scaleX, y: l.y * scaleY }));
+        this.pixelScale = this._estimatePixelScale();
+
+        // Render the chosen panel into the fullscreen canvas
+        if (canvasKey === 'preop') {
+            const origCtx = this.ctxs.preop;
+            this.ctxs.preop = fsCtx;
+            this.renderPreop();
+            this.ctxs.preop = origCtx;
+        } else if (canvasKey === 'strategy') {
+            const origCtx = this.ctxs.strategy;
+            this.ctxs.strategy = fsCtx;
+            this.renderStrategy();
+            this.ctxs.strategy = origCtx;
+        } else if (canvasKey === 'postop') {
+            const origCtx = this.ctxs.postop;
+            this.ctxs.postop = fsCtx;
+            this.renderPostop();
+            this.ctxs.postop = origCtx;
+        }
+
+        // Restore original state
+        this.landmarks = origLandmarks;
+        this.canvasW = origW;
+        this.canvasH = origH;
+        this.pixelScale = this._estimatePixelScale();
+
+        // Show overlay
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', this._escHandler);
+    },
+
+    _closeFullscreen() {
+        if (this._fullscreenOverlay) {
+            this._fullscreenOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', this._escHandler);
+        }
     },
 
     // =============================================

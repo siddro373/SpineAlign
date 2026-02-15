@@ -1355,12 +1355,57 @@ select.flashcard-input option {
     overflow: hidden;
     display: flex;
     justify-content: center;
+    cursor: zoom-in;
 }
 .plan-canvas-wrap canvas {
     display: block;
     width: 100%;
     max-height: 80vh;
     object-fit: contain;
+}
+/* Fullscreen overlay for plan panels */
+.plan-fullscreen-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.plan-fullscreen-overlay.active {
+    display: flex;
+}
+.plan-fullscreen-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: rgba(0,0,0,0.7);
+    z-index: 1;
+}
+.plan-fullscreen-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.plan-fullscreen-hint {
+    font-size: 12px;
+    color: var(--text-light);
+}
+.plan-fullscreen-canvas {
+    cursor: zoom-out;
+    max-width: 100vw;
+    max-height: calc(100vh - 50px);
+    margin-top: 44px;
 }
 .plan-legend {
     margin-top: 16px;
