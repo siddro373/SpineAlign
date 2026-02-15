@@ -136,8 +136,15 @@ const Planner = {
         const wrap = this.canvases.preop.parentElement;
         const maxW = wrap.clientWidth;
         const aspect = this.image.width / this.image.height;
-        const w = maxW;
-        const h = maxW / aspect;
+        const maxViewH = window.innerHeight * 0.8;
+        let w = maxW;
+        let h = maxW / aspect;
+
+        // Clamp height to 80vh so each panel fits in window
+        if (h > maxViewH) {
+            h = maxViewH;
+            w = h * aspect;
+        }
 
         this.canvasW = w;
         this.canvasH = h;
@@ -149,8 +156,10 @@ const Planner = {
 
     _setupCanvasesSchematic() {
         const wrap = this.canvases.preop.parentElement;
-        const w = wrap.clientWidth;
-        const h = w * 1.3;
+        const maxW = wrap.clientWidth;
+        const maxViewH = window.innerHeight * 0.8;
+        const w = maxW;
+        const h = Math.min(w * 1.3, maxViewH);
 
         this.canvasW = w;
         this.canvasH = h;

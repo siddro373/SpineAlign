@@ -1263,9 +1263,9 @@ select.flashcard-input option {
    SURGICAL PLAN VISUALIZATION
    ============================================= */
 .plan-layout-3 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
     margin-bottom: 20px;
 }
 .plan-panel {
@@ -1351,10 +1351,16 @@ select.flashcard-input option {
 .plan-canvas-wrap {
     position: relative;
     background: #050810;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
 }
 .plan-canvas-wrap canvas {
     display: block;
     width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
 }
 .plan-legend {
     margin-top: 16px;
@@ -1421,9 +1427,10 @@ select.flashcard-input option {
     .flow-progress, .btn-group, .welcome-disclaimer,
     .toast-container, .modal-overlay, .annotator-toolbar,
     .btn-contact-rep, .flashcard-btn-group { display: none !important; }
-    .plan-layout-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .plan-layout-3 { gap: 12px; }
     .plan-panel { break-inside: avoid; }
     .plan-step { break-inside: avoid; }
+    .plan-canvas-wrap { max-height: none; }
     .screen { display: block !important; }
     .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; background: white; }
     .implant-card { break-inside: avoid; background: white; }
@@ -1466,7 +1473,6 @@ select.flashcard-input option {
     .implant-header { flex-direction: column; align-items: flex-start; }
 
     /* Plan layout */
-    .plan-layout-3 { grid-template-columns: 1fr; }
     .plan-legend-grid { gap: 10px; }
     .plan-step-detail { font-size: 12px; }
 }
